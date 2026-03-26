@@ -11,7 +11,9 @@ import { FrontendTaskTable } from './components/FrontendTaskTable'
 import { OrderTable } from './components/OrderTable'
 import { RechargeTable } from './components/RechargeTable'
 import { RuleTable } from './components/RuleTable'
+import { TaskClaimTable } from './components/TaskClaimTable'
 import { UserTable } from './components/UserTable'
+import { VerificationTable } from './components/VerificationTable'
 import { VIPTable } from './components/VIPTable'
 import { WithdrawTable } from './components/WithdrawTable'
 import { searchFields, sidebarMenus } from './data/adminMock'
@@ -19,6 +21,8 @@ import { searchFields, sidebarMenus } from './data/adminMock'
 const pageTitles = {
   frontendContent: '前台内容',
   frontendTasks: '任务配置',
+  taskClaims: '任务审核',
+  verifications: '实名认证审核',
   withdraw: '提现管理',
   recharge: '充值管理',
   orders: '订单列表',
@@ -37,10 +41,15 @@ function filterRows(rows, filters) {
       filters.inviteCode,
     ].filter(Boolean)
 
-    if (!keywordChecks.length) return true
-
     const text = Object.values(row).join(' ')
-    return keywordChecks.every((keyword) => text.includes(keyword))
+    const keywordPass = !keywordChecks.length || keywordChecks.every((keyword) => text.includes(keyword))
+    if (!keywordPass) return false
+
+    if (filters.status && filters.status !== '全部') {
+      return text.includes(filters.status)
+    }
+
+    return true
   })
 }
 
@@ -80,6 +89,9 @@ export function AdminDashboard({
   onLogout,
   onChangePassword,
   onChangeAccount,
+  onReviewTaskClaim,
+  onReviewWithdraw,
+  onReviewVerification,
   adminData,
   platformData,
   onSavePlatform,
@@ -92,7 +104,9 @@ export function AdminDashboard({
   const [appliedFilters, setAppliedFilters] = useState(searchFields)
   const [pages, setPages] = useState({
     frontendTasks: 1,
+    taskClaims: 1,
     users: 1,
+    verifications: 1,
     vip: 1,
     rules: 1,
     orders: 1,
@@ -100,8 +114,13 @@ export function AdminDashboard({
     withdraw: 1,
   })
   const [saving, setSaving] = useState(false)
+  const [processingClaimId, setProcessingClaimId] = useState(null)
+  const [processingWithdrawId, setProcessingWithdrawId] = useState(null)
+  const [processingVerificationId, setProcessingVerificationId] = useState(null)
 
   const statsGroups = adminData?.statsGroups ?? []
+  const taskClaims = adminData?.taskClaims ?? []
+  const verifications = adminData?.verifications ?? []
   const users = adminData?.users ?? []
   const vipLevels = adminData?.vipLevels ?? []
   const rules = adminData?.rules ?? []
@@ -112,6 +131,8 @@ export function AdminDashboard({
   const datasets = useMemo(
     () => ({
       frontendTasks: filterRows(platformData.tasks, appliedFilters),
+      taskClaims: filterRows(taskClaims, appliedFilters),
+      verifications: filterRows(verifications, appliedFilters),
       users: filterRows(users, appliedFilters),
       vip: filterRows(vipLevels, appliedFilters),
       rules: filterRows(rules, appliedFilters),
@@ -119,7 +140,7 @@ export function AdminDashboard({
       recharge: filterRows(recharges, appliedFilters),
       withdraw: filterRows(withdraws, appliedFilters),
     }),
-    [appliedFilters, orders, platformData.tasks, recharges, rules, users, vipLevels, withdraws],
+    [appliedFilters, orders, platformData.tasks, recharges, rules, taskClaims, verifications, users, vipLevels, withdraws],
   )
 
   const currentRows = datasets[activeKey] ?? platformData.tasks
@@ -134,6 +155,33 @@ export function AdminDashboard({
       await onSavePlatform(nextPlatform)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const reviewClaim = async (claim, action) => {
+    setProcessingClaimId(claim.id)
+    try {
+      await onReviewTaskClaim(claim.id, action)
+    } finally {
+      setProcessingClaimId(null)
+    }
+  }
+
+  const reviewWithdraw = async (row, action) => {
+    setProcessingWithdrawId(row.id)
+    try {
+      await onReviewWithdraw(row.id, action)
+    } finally {
+      setProcessingWithdrawId(null)
+    }
+  }
+
+  const reviewVerification = async (row, action, reason = '') => {
+    setProcessingVerificationId(row.id)
+    try {
+      await onReviewVerification?.(row.id, action, reason)
+    } finally {
+      setProcessingVerificationId(null)
     }
   }
 
@@ -157,8 +205,30 @@ export function AdminDashboard({
             onSelect={setSelectedTaskId}
           />
         )
+      case 'taskClaims':
+        return (
+          <TaskClaimTable
+            rows={datasets.taskClaims}
+            page={pages.taskClaims}
+            onPageChange={(page) => setPage('taskClaims', page)}
+            processingId={processingClaimId}
+            onApprove={(claim) => reviewClaim(claim, 'approve')}
+            onReject={(claim) => reviewClaim(claim, 'reject')}
+          />
+        )
       case 'users':
         return <UserTable rows={datasets.users} page={pages.users} onPageChange={(page) => setPage('users', page)} />
+      case 'verifications':
+        return (
+          <VerificationTable
+            rows={datasets.verifications}
+            page={pages.verifications}
+            onPageChange={(page) => setPage('verifications', page)}
+            processingId={processingVerificationId}
+            onApprove={(row) => reviewVerification(row, 'approve')}
+            onReject={(row, reason) => reviewVerification(row, 'reject', reason)}
+          />
+        )
       case 'vip':
         return <VIPTable rows={datasets.vip} page={pages.vip} onPageChange={(page) => setPage('vip', page)} />
       case 'rules':
@@ -169,7 +239,16 @@ export function AdminDashboard({
         return <RechargeTable rows={datasets.recharge} page={pages.recharge} onPageChange={(page) => setPage('recharge', page)} />
       case 'withdraw':
       default:
-        return <WithdrawTable rows={datasets.withdraw} page={pages.withdraw} onPageChange={(page) => setPage('withdraw', page)} />
+        return (
+          <WithdrawTable
+            rows={datasets.withdraw}
+            page={pages.withdraw}
+            onPageChange={(page) => setPage('withdraw', page)}
+            processingId={processingWithdrawId}
+            onApprove={(row) => reviewWithdraw(row, 'approve')}
+            onReject={(row) => reviewWithdraw(row, 'reject')}
+          />
+        )
     }
   }
 
@@ -220,7 +299,7 @@ export function AdminDashboard({
           onChange={setFilters}
           onSearch={() => {
             setAppliedFilters(filters)
-            setPages({ frontendTasks: 1, users: 1, vip: 1, rules: 1, orders: 1, recharge: 1, withdraw: 1 })
+            setPages({ frontendTasks: 1, taskClaims: 1, users: 1, verifications: 1, vip: 1, rules: 1, orders: 1, recharge: 1, withdraw: 1 })
           }}
           onExport={() => downloadRows(`${pageTitles[activeKey]}.csv`, Array.isArray(currentRows) ? currentRows : [])}
         />

@@ -1,6 +1,6 @@
 import { SectionTitle } from '../components/SectionTitle'
 
-export function HomePage({ platformData }) {
+export function HomePage({ platformData, onOpenTaskList, onOpenTask, onQuickAction }) {
   const { homeStats, tickerItems, featuredTasks, quickStats } = platformData
 
   return (
@@ -8,11 +8,16 @@ export function HomePage({ platformData }) {
       <section className="overflow-hidden rounded-[28px] bg-gradient-to-br from-black via-slate-900 to-zinc-800 p-4 text-white shadow-[0_18px_40px_rgba(15,23,42,0.28)]">
         <div className="grid grid-cols-2 gap-3">
           {homeStats.map((item) => (
-            <div key={item.label} className="rounded-3xl bg-white/8 p-3 backdrop-blur-sm">
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => onQuickAction?.(item.label)}
+              className="rounded-3xl bg-white/8 p-3 text-left backdrop-blur-sm transition hover:bg-white/12 active:scale-[0.98]"
+            >
               <p className="text-xs text-white/60">{item.label}</p>
               <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
               <p className="mt-1 text-xs text-[#f3c969]">{item.sub}</p>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -26,12 +31,14 @@ export function HomePage({ platformData }) {
       </section>
 
       <section>
-        <SectionTitle eyebrow="Featured" title="热门任务" action="查看全部" />
+        <SectionTitle eyebrow="Featured" title="Hot Tasks" action="View All" onAction={onOpenTaskList} />
         <div className="hide-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
           {featuredTasks.map((task) => (
-            <article
+            <button
               key={task.id}
-              className="min-w-[220px] rounded-[28px] bg-white p-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(15,23,42,0.14)]"
+              type="button"
+              onClick={() => onOpenTask?.(task)}
+              className="min-w-[220px] rounded-[28px] bg-white p-3 text-left shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(15,23,42,0.14)]"
             >
               <div className="relative overflow-hidden rounded-3xl">
                 <img src={task.image} alt={task.title} className="h-32 w-full object-cover" />
@@ -48,24 +55,26 @@ export function HomePage({ platformData }) {
                   </span>
                 </div>
               </div>
-            </article>
+            </button>
           ))}
         </div>
       </section>
 
       <section>
-        <SectionTitle eyebrow="Account" title="快捷数据" />
+        <SectionTitle eyebrow="Account" title="Quick Stats" />
         <div className="grid grid-cols-3 gap-3">
           {quickStats.map((item) => (
-            <div
+            <button
               key={item.label}
-              className="rounded-[24px] bg-white p-3 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+              type="button"
+              onClick={() => onQuickAction?.(item.label)}
+              className="rounded-[24px] bg-white p-3 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_35px_rgba(15,23,42,0.14)] active:scale-[0.98]"
             >
               <p className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
                 {item.label}
               </p>
               <p className="mt-2 text-lg font-semibold text-slate-900">{item.value}</p>
-            </div>
+            </button>
           ))}
         </div>
       </section>

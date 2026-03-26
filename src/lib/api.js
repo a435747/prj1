@@ -20,10 +20,29 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  login: (body) => request('/auth/login', { method: 'POST', body }),
+  adminLogin: (body) => request('/auth/login', { method: 'POST', body }),
+  getAdminUser: (token) => request('/auth/me', { token }),
   changePassword: (token, body) => request('/auth/change-password', { method: 'POST', body, token }),
   changeAccount: (token, body) => request('/auth/change-account', { method: 'POST', body, token }),
-  getPlatform: () => request('/platform'),
+
+  registerFrontendUser: (body) => request('/frontend-auth/register', { method: 'POST', body }),
+  loginFrontendUser: (body) => request('/frontend-auth/login', { method: 'POST', body }),
+  getFrontendUser: (token) => request('/frontend-auth/me', { token }),
+  changeFrontendPassword: (token, body) => request('/frontend-auth/change-password', { method: 'POST', body, token }),
+  submitFrontendVerification: (token, body) => request('/frontend-auth/verification', { method: 'POST', body, token }),
+
+  getPlatform: (token) => request('/platform', { token }),
+  claimTask: (token, taskId) => request('/platform/claim-task', { method: 'POST', body: { taskId }, token }),
+  submitTaskProof: (token, claimId, proofText) =>
+    request(`/platform/task-claims/${claimId}/submit`, { method: 'POST', body: { proofText }, token }),
+  createWithdrawRequest: (token, body) => request('/platform/withdraw-requests', { method: 'POST', body, token }),
+
   savePlatform: (token, body) => request('/platform', { method: 'PUT', body, token }),
   getAdminData: (token) => request('/admin/data', { token }),
+  reviewTaskClaim: (token, claimId, action) =>
+    request(`/admin/task-claims/${claimId}/review`, { method: 'POST', body: { action }, token }),
+  reviewWithdrawRequest: (token, requestId, action) =>
+    request(`/admin/withdraw-requests/${requestId}/review`, { method: 'POST', body: { action }, token }),
+  reviewVerification: (token, verificationId, action, reason = '') =>
+    request(`/admin/verifications/${verificationId}/review`, { method: 'POST', body: { action, reason }, token }),
 }

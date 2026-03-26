@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export function AccountPanel({ username, onSubmit }) {
   const [form, setForm] = useState({ currentPassword: '', newUsername: username ?? '', newPassword: '' })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, newUsername: username ?? '' }))
+  }, [username])
 
   const handleSubmit = async (event) => {
     event.preventDefault()

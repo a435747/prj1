@@ -1,21 +1,21 @@
 import { DataTable } from './DataTable'
 
 const columns = [
-  { key: 'orderNo', label: '订单号' },
-  { key: 'username', label: '用户名称' },
-  { key: 'amount', label: '提现金额' },
+  { key: 'id', label: '记录ID' },
+  { key: 'username', label: '用户' },
+  { key: 'realName', label: '真实姓名' },
+  { key: 'idCard', label: '身份证号' },
+  { key: 'accountName', label: '账户姓名' },
   { key: 'status', label: '状态' },
-  { key: 'accountType', label: '提现方式' },
-  { key: 'accountNo', label: '收款账号' },
-  { key: 'createdAt', label: '发起时间' },
+  { key: 'createdAt', label: '提交时间' },
   { key: 'reviewedAt', label: '审核时间' },
   { key: 'summary', label: '备注' },
 ]
 
-export function WithdrawTable({ rows, page, onPageChange, onApprove, onReject, processingId }) {
+export function VerificationTable({ rows, page, onPageChange, onApprove, onReject, processingId }) {
   return (
     <DataTable
-      title="提现管理表格"
+      title="实名认证审核"
       columns={columns}
       rows={rows}
       page={page}
@@ -28,9 +28,7 @@ export function WithdrawTable({ rows, page, onPageChange, onApprove, onReject, p
             <button
               type="button"
               disabled={locked}
-              onClick={() => {
-                if (window.confirm(`确认通过提现：${row.amount} / ${row.username}？`)) onApprove(row)
-              }}
+              onClick={() => onApprove(row)}
               className="rounded-md bg-green-50 px-3 py-1 text-xs text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {processingId === row.id ? '处理中...' : '通过'}
@@ -39,7 +37,9 @@ export function WithdrawTable({ rows, page, onPageChange, onApprove, onReject, p
               type="button"
               disabled={locked}
               onClick={() => {
-                if (window.confirm(`确认驳回提现：${row.amount} / ${row.username}？`)) onReject(row)
+                const reason = window.prompt('请输入驳回原因', '证件信息不清晰，请重新上传')
+                if (reason === null) return
+                onReject(row, reason)
               }}
               className="rounded-md bg-red-50 px-3 py-1 text-xs text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
             >

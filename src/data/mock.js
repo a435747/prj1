@@ -1,146 +1,146 @@
 export const tabs = [
-  { key: 'home', label: '首页', title: '首页', icon: 'home' },
-  { key: 'tasks', label: '抢单', title: '任务大厅', icon: 'tasks' },
-  { key: 'earnings', label: '收益', title: '收益动态', icon: 'feed' },
-  { key: 'leaderboard', label: '排行', title: '收益排行', icon: 'rank' },
-  { key: 'profile', label: '我的', title: '个人中心', icon: 'user' },
+  { key: 'home', label: 'Home', title: 'Home', icon: 'home' },
+  { key: 'tasks', label: 'Tasks', title: 'Task Hall', icon: 'tasks' },
+  { key: 'earnings', label: 'Earnings', title: 'Earnings', icon: 'feed' },
+  { key: 'leaderboard', label: 'Rank', title: 'Leaderboard', icon: 'rank' },
+  { key: 'profile', label: 'Profile', title: 'Profile', icon: 'user' },
 ]
 
 export const tickerItems = [
-  '用户 A862 今日完成 8 单，收益 $120',
-  '用户 M118 今日提现 $460 已到账',
-  '用户 K520 抢到高佣任务，收益 $188',
-  '用户 P903 连续 7 天打卡，奖励 $66',
+  'User A862 completed 8 orders today and earned $120',
+  'User M118 withdrew $460 today and it has arrived',
+  'User K520 grabbed a high-commission task and earned $188',
+  'User P903 checked in for 7 straight days and received $66',
 ]
 
 export const featuredTasks = [
   {
     id: 1,
-    title: '品牌门店探访',
+    title: 'Brand Store Visit',
     price: 128,
     tag: 'HOT',
-    city: '上海',
+    city: 'Shanghai',
     image:
       'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 2,
-    title: '短视频口播体验',
+    title: 'Short Video Voiceover Trial',
     price: 86,
     tag: 'NEW',
-    city: '杭州',
+    city: 'Hangzhou',
     image:
       'https://images.unsplash.com/photo-1494173853739-c21f58b16055?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 3,
-    title: '高端餐饮拍摄',
+    title: 'Premium Dining Shoot',
     price: 200,
     tag: 'HOT',
-    city: '深圳',
+    city: 'Shenzhen',
     image:
       'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
   },
 ]
 
-export const taskFilters = ['全部', '高价', '简单', '附近']
+export const taskFilters = ['All', 'High Pay', 'Easy', 'Nearby']
 
 export const tasks = [
   {
     id: 101,
-    title: '门店打卡拍摄',
+    title: 'Store Check-in Shoot',
     price: 58,
-    location: '浦东新区',
+    location: 'Pudong',
     badge: 'HOT',
     image:
       'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=800&q=80',
-    verified: ['已认证', '视频认证'],
-    description: '到店完成指定机位拍摄与评价提交，适合新手，审核快。',
+    verified: ['Verified', 'Video Verified'],
+    description: 'Visit the store, complete the required camera shots, and submit a review. Great for beginners with fast approval.',
     rating: 4.8,
     commission: '$58',
-    time: '25 分钟',
-    city: '上海',
-    type: '附近',
+    time: '25 mins',
+    city: 'Shanghai',
+    type: 'Nearby',
   },
   {
     id: 102,
-    title: 'App 新人体验单',
+    title: 'App New User Trial',
     price: 18,
-    location: '线上',
+    location: 'Online',
     badge: 'NEW',
     image:
       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
-    verified: ['已认证'],
-    description: '下载并完成新手引导即可结算，流程简单，适合碎片时间。',
+    verified: ['Verified'],
+    description: 'Download the app and complete the onboarding process to get paid. Simple and ideal for spare time.',
     rating: 4.6,
     commission: '$18',
-    time: '8 分钟',
-    city: '全国',
-    type: '简单',
+    time: '8 mins',
+    city: 'Nationwide',
+    type: 'Easy',
   },
   {
     id: 103,
-    title: '高佣探店视频',
+    title: 'High-Commission Store Video',
     price: 168,
-    location: '天河区',
+    location: 'Tianhe',
     badge: 'HOT',
     image:
       'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-    verified: ['已认证', '视频认证'],
-    description: '输出 30 秒视频素材并上传，任务佣金高，需按模板执行。',
+    verified: ['Verified', 'Video Verified'],
+    description: 'Create and upload a 30-second video clip. High commission task and must follow the given template.',
     rating: 4.9,
     commission: '$168',
-    time: '45 分钟',
-    city: '广州',
-    type: '高价',
+    time: '45 mins',
+    city: 'Guangzhou',
+    type: 'High Pay',
   },
   {
     id: 104,
-    title: '咖啡门店评价',
+    title: 'Coffee Shop Review',
     price: 36,
-    location: '福田区',
+    location: 'Futian',
     badge: 'NEW',
     image:
       'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80',
-    verified: ['已认证'],
-    description: '到店消费后上传票据和体验反馈，当天可审核。',
+    verified: ['Verified'],
+    description: 'Make a purchase in-store, upload your receipt, and submit your experience review for same-day approval.',
     rating: 4.7,
     commission: '$36',
-    time: '20 分钟',
-    city: '深圳',
-    type: '附近',
+    time: '20 mins',
+    city: 'Shenzhen',
+    type: 'Nearby',
   },
   {
     id: 105,
-    title: '直播间互动任务',
+    title: 'Livestream Engagement Task',
     price: 22,
-    location: '线上',
+    location: 'Online',
     badge: 'HOT',
     image:
       'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
-    verified: ['已认证'],
-    description: '进入指定直播间完成互动和停留时长，提交截图即可。',
+    verified: ['Verified'],
+    description: 'Enter the assigned livestream, complete engagement actions, and submit screenshots for review.',
     rating: 4.5,
     commission: '$22',
-    time: '12 分钟',
-    city: '全国',
-    type: '简单',
+    time: '12 mins',
+    city: 'Nationwide',
+    type: 'Easy',
   },
   {
     id: 106,
-    title: '品牌活动协拍',
+    title: 'Brand Event Co-shoot',
     price: 120,
-    location: '西湖区',
+    location: 'Xihu',
     badge: 'NEW',
     image:
       'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80',
-    verified: ['已认证', '视频认证'],
-    description: '配合品牌线下活动完成素材采集与上传，结算稳定。',
+    verified: ['Verified', 'Video Verified'],
+    description: 'Assist with offline brand event shooting and upload the media files. Stable payout and clear workflow.',
     rating: 4.9,
     commission: '$120',
-    time: '50 分钟',
-    city: '杭州',
-    type: '高价',
+    time: '50 mins',
+    city: 'Hangzhou',
+    type: 'High Pay',
   },
 ]
 
@@ -149,7 +149,7 @@ export const earningsFeed = [
     id: 1,
     user: 'Luna_88',
     amount: '$300',
-    text: '今天完成 3 个高佣单，状态拉满，晚上继续冲。',
+    text: 'Finished 3 high-commission tasks today. Energy is high and I am going for more tonight.',
     avatar:
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
     image:
@@ -159,7 +159,7 @@ export const earningsFeed = [
     id: 2,
     user: 'MasonGo',
     amount: '$188',
-    text: '视频认证任务审核通过，到账速度很快。',
+    text: 'My video verification task was approved and the payout arrived very quickly.',
     avatar:
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
     image:
@@ -167,9 +167,9 @@ export const earningsFeed = [
   },
   {
     id: 3,
-    user: 'Cici赚赚',
+    user: 'CiciWin',
     amount: '$520',
-    text: '连续签到 + 任务奖励一起结算，今天破纪录。',
+    text: 'Daily check-in bonuses and task rewards were settled together today. New personal record.',
     avatar:
       'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80',
     image:
@@ -178,15 +178,15 @@ export const earningsFeed = [
 ]
 
 export const leaderboard = [
-  { id: 1, name: 'Nova金牌', amount: '$8,820', level: 'Top 1' },
+  { id: 1, name: 'Nova Gold', amount: '$8,820', level: 'Top 1' },
   { id: 2, name: 'Aiden Pro', amount: '$7,460', level: 'Top 2' },
-  { id: 3, name: 'Vivi任务王', amount: '$6,980', level: 'Top 3' },
-  { id: 4, name: 'Jay高佣', amount: '$6,210', level: 'Top 4' },
-  { id: 5, name: 'Mia冲榜', amount: '$5,860', level: 'Top 5' },
+  { id: 3, name: 'Vivi Task King', amount: '$6,980', level: 'Top 3' },
+  { id: 4, name: 'Jay HighPay', amount: '$6,210', level: 'Top 4' },
+  { id: 5, name: 'Mia Rising', amount: '$5,860', level: 'Top 5' },
 ]
 
 export const profileStats = [
-  { label: '账户余额', value: '$1,286' },
-  { label: '本月收益', value: '$3,920' },
-  { label: '可提现', value: '$860' },
+  { label: 'Balance', value: '$1,286' },
+  { label: 'Monthly Earnings', value: '$3,920' },
+  { label: 'Withdrawable', value: '$860' },
 ]

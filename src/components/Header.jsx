@@ -9,7 +9,7 @@ export function Header({ title }) {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
         </div>
         <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-white/70">
-          VIP 通道
+          VIP Access
         </div>
       </div>
     </header>

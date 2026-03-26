@@ -16,10 +16,21 @@ function StarRow({ rating }) {
   )
 }
 
-export function TaskDetailCard({ task }) {
+function getActionLabel(claim, submitting) {
+  if (claim?.status === '已完成') return 'Completed'
+  if (claim?.status === '待审核') return 'Awaiting Review'
+  if (claim?.status === '待提交') return 'Submit Proof In Profile'
+  if (claim?.status === '已驳回') return 'Claim Again'
+  if (submitting) return 'Submitting...'
+  return 'Start Task'
+}
+
+export function TaskDetailCard({ task, claim, submitting, onStart, onOpenProfile }) {
   if (!task) {
     return null
   }
+
+  const disabled = Boolean(claim && claim.status !== '已驳回') || submitting
 
   return (
     <div className="overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-slate-900 to-zinc-950 p-[1px] shadow-[0_20px_45px_rgba(15,23,42,0.18)]">
@@ -36,6 +47,19 @@ export function TaskDetailCard({ task }) {
                   {item}
                 </span>
               ))}
+              {claim ? (
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                  claim.status === '已完成'
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : claim.status === '已驳回'
+                      ? 'bg-red-50 text-red-600'
+                      : claim.status === '待审核'
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'bg-amber-50 text-amber-600'
+                }`}>
+                  {claim.status}
+                </span>
+              ) : null}
             </div>
           </div>
           <div className="rounded-2xl bg-amber-50 px-3 py-2 text-right">
@@ -63,13 +87,27 @@ export function TaskDetailCard({ task }) {
             <span>location</span>
             <span className="font-semibold text-slate-900">{task.city} · {task.location}</span>
           </div>
+          {claim?.summary ? (
+            <div className="rounded-2xl bg-white p-3 text-slate-600">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">task status</p>
+              <p className="mt-2 leading-6">{claim.summary}</p>
+            </div>
+          ) : null}
         </div>
 
         <button
           type="button"
-          className="mt-4 w-full rounded-3xl bg-black px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,0,0,0.2)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)] active:scale-[0.98]"
+          disabled={disabled}
+          onClick={() => {
+            if (claim && claim.status !== '已驳回') {
+              onOpenProfile?.()
+              return
+            }
+            onStart?.(task)
+          }}
+          className="mt-4 w-full rounded-3xl bg-black px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,0,0,0.2)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(0,0,0,0.24)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
         >
-          Start Task
+          {getActionLabel(claim, submitting)}
         </button>
       </div>
     </div>

@@ -1,21 +1,19 @@
 import { DataTable } from './DataTable'
 
 const columns = [
-  { key: 'orderNo', label: '订单号' },
-  { key: 'username', label: '用户名称' },
-  { key: 'amount', label: '提现金额' },
-  { key: 'status', label: '状态' },
-  { key: 'accountType', label: '提现方式' },
-  { key: 'accountNo', label: '收款账号' },
-  { key: 'createdAt', label: '发起时间' },
-  { key: 'reviewedAt', label: '审核时间' },
-  { key: 'summary', label: '备注' },
+  { key: 'id', label: '记录ID' },
+  { key: 'username', label: '用户' },
+  { key: 'title', label: '任务名称' },
+  { key: 'amount', label: '预计收益' },
+  { key: 'status', label: '审核状态' },
+  { key: 'submittedAt', label: '提交时间' },
+  { key: 'proofText', label: '任务凭证' },
 ]
 
-export function WithdrawTable({ rows, page, onPageChange, onApprove, onReject, processingId }) {
+export function TaskClaimTable({ rows, page, onPageChange, onApprove, onReject, processingId }) {
   return (
     <DataTable
-      title="提现管理表格"
+      title="任务审核列表"
       columns={columns}
       rows={rows}
       page={page}
@@ -29,7 +27,7 @@ export function WithdrawTable({ rows, page, onPageChange, onApprove, onReject, p
               type="button"
               disabled={locked}
               onClick={() => {
-                if (window.confirm(`确认通过提现：${row.amount} / ${row.username}？`)) onApprove(row)
+                if (window.confirm(`确认通过任务：${row.title}？`)) onApprove(row)
               }}
               className="rounded-md bg-green-50 px-3 py-1 text-xs text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -39,7 +37,7 @@ export function WithdrawTable({ rows, page, onPageChange, onApprove, onReject, p
               type="button"
               disabled={locked}
               onClick={() => {
-                if (window.confirm(`确认驳回提现：${row.amount} / ${row.username}？`)) onReject(row)
+                if (window.confirm(`确认驳回任务：${row.title}？`)) onReject(row)
               }}
               className="rounded-md bg-red-50 px-3 py-1 text-xs text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
             >

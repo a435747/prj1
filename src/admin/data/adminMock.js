@@ -9,6 +9,7 @@ export const sidebarMenus = [
   {
     title: '交易管理',
     items: [
+      { key: 'taskClaims', label: '任务审核' },
       { key: 'orders', label: '订单列表' },
       { key: 'recharge', label: '充值管理' },
       { key: 'withdraw', label: '提现管理' },
@@ -20,7 +21,7 @@ export const sidebarMenus = [
   },
   {
     title: '系统管理',
-    items: [{ key: 'users', label: '用户管理' }],
+    items: [{ key: 'users', label: '用户管理' }, { key: 'verifications', label: '实名认证审核' }],
   },
 ]
 
