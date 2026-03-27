@@ -8,8 +8,10 @@ import { HomePage } from '../pages/HomePage'
 import { LeaderboardPage } from '../pages/LeaderboardPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { RealNamePage } from '../pages/RealNamePage'
+import { RechargePage } from '../pages/RechargePage'
 import { SecurityCenterPage } from '../pages/SecurityCenterPage'
 import { TasksPage } from '../pages/TasksPage'
+import { VipPage } from '../pages/VipPage'
 
 function isRejectedStatus(status) {
   return status === '已驳回' || status === 'rejected'
@@ -20,6 +22,7 @@ export function FrontendApp({
   onClaimTask,
   onSubmitTaskProof,
   onCreateWithdrawRequest,
+  onCreateRechargeRequest,
   onLogout,
   frontendUser,
   onSubmitVerification,
@@ -30,6 +33,7 @@ export function FrontendApp({
   const [submittingTaskId, setSubmittingTaskId] = useState(null)
   const [proofSubmittingId, setProofSubmittingId] = useState(null)
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false)
+  const [rechargeSubmitting, setRechargeSubmitting] = useState(false)
   const [detail, setDetail] = useState(null)
 
   const title = useMemo(
@@ -90,7 +94,12 @@ export function FrontendApp({
 
   const handleCreateWithdraw = async (payload) => {
     if (withdrawSubmitting) return
-
+    const isVerified = frontendUser?.verification?.status === 'approved' || frontendUser?.verification?.status === '已通过'
+    if (!isVerified) {
+      setDetail({ title: 'Real-Name Verification', subtitle: 'Required before withdrawal', content: 'real-name' })
+      showNotice('Please complete real-name verification before withdrawing.')
+      return
+    }
     try {
       setWithdrawSubmitting(true)
       await onCreateWithdrawRequest?.(payload)
@@ -100,6 +109,20 @@ export function FrontendApp({
       throw error
     } finally {
       setWithdrawSubmitting(false)
+    }
+  }
+
+  const handleCreateRecharge = async (payload) => {
+    if (rechargeSubmitting) return
+    try {
+      setRechargeSubmitting(true)
+      await onCreateRechargeRequest?.(payload)
+      showNotice('Recharge request submitted. Admin will approve shortly.')
+    } catch (error) {
+      showNotice(error.message || 'Recharge request failed. Please try again later.')
+      throw error
+    } finally {
+      setRechargeSubmitting(false)
     }
   }
 
@@ -113,6 +136,11 @@ export function FrontendApp({
     if (label === 'Withdrawal Records') {
       setActiveTab('earnings')
       showNotice('Earnings page opened.')
+      return
+    }
+
+    if (label === 'Recharge') {
+      setDetail({ title: 'Recharge Center', subtitle: 'Top up your balance', content: 'recharge' })
       return
     }
 
@@ -160,16 +188,33 @@ export function FrontendApp({
         />
       )
     }
+    if (detail.content === 'recharge') {
+      return (
+        <RechargePage
+          verification={frontendUser?.verification}
+          rechargeRequests={platformData?.rechargeRequests ?? []}
+          rechargeSubmitting={rechargeSubmitting}
+          onSubmitRecharge={handleCreateRecharge}
+          supportLink={platformData?.supportLink}
+        />
+      )
+    }
+
     if (detail.content === 'security') {
       return (
         <SecurityCenterPage
+          frontendUser={frontendUser}
           onChangePassword={async (body) => {
             const result = await onChangeFrontendPassword?.(body)
             showNotice(result?.message || 'Password updated successfully.')
+            setDetail(null)
             return result
           }}
         />
       )
+    }
+    if (detail.content === 'vip') {
+      return <VipPage frontendUser={frontendUser} />
     }
     if (detail.content === 'rank') {
       return (
@@ -233,6 +278,7 @@ export function FrontendApp({
         return (
           <EarningsPage
             platformData={mergedPlatformData}
+            verification={frontendUser?.verification}
             withdrawSubmitting={withdrawSubmitting}
             onCreateWithdraw={handleCreateWithdraw}
             onFeedClick={(item) => setDetail({ title: `${item.user} Earnings`, subtitle: 'Earnings detail', content: 'feed', item })}
@@ -275,7 +321,10 @@ export function FrontendApp({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(212,166,79,0.18),transparent_30%),linear-gradient(180deg,#050505_0_128px,#f6f7f8_128px_100%)]">
       <div className="mx-auto min-h-screen w-full max-w-md bg-transparent">
-        <Header title={title} />
+        <Header
+          title={title}
+          onVipClick={() => setDetail({ title: 'VIP Access', subtitle: 'Membership levels & benefits', content: 'vip' })}
+        />
 
         <main className="px-4 pb-28 pt-24">
           {notice ? (

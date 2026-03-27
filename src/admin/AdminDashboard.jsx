@@ -19,6 +19,7 @@ import { WithdrawTable } from './components/WithdrawTable'
 import { sidebarMenus } from './data/adminMock'
 
 const pageTitles = {
+  dashboard: '管理员主页',
   frontendContent: '前台内容运营',
   frontendTasks: '任务配置中心',
   taskClaims: '任务审核中心',
@@ -32,6 +33,7 @@ const pageTitles = {
 }
 
 const pageDescriptions = {
+  dashboard: '查看待办任务、平台统计数据，以及账户与密码设置。',
   frontendContent: '维护前台首页关键数据、公告和任务展示内容，修改将直接同步到前台。',
   frontendTasks: '统一维护任务标题、地区、价格与标签，用于前台任务大厅展示。',
   taskClaims: '集中审核用户提交的任务凭证，优先处理待审核记录。',
@@ -100,25 +102,31 @@ function buildDynamicStats(dataset) {
   }
 }
 
-function buildWorkQueue(taskClaims, verifications, withdraws) {
+function buildWorkQueue(taskClaims, verifications, withdraws, recharges) {
   return [
     {
       key: 'taskClaims',
-      title: '待处理任务审核',
-      count: taskClaims.filter((item) => item.status === '待审核').length,
-      note: '优先核验已提交任务凭证的记录。',
+      title: 'Pending Task Reviews',
+      count: taskClaims.filter((item) => item.status === '待审核' || item.status === 'under_review').length,
+      note: 'Review submitted task proof records.',
     },
     {
       key: 'verifications',
-      title: '待处理实名认证',
-      count: verifications.filter((item) => item.status === '待审核').length,
-      note: '请核验实名、证件号与账户姓名一致性。',
+      title: 'Pending Verifications',
+      count: verifications.filter((item) => item.status === '待审核' || item.status === 'under_review').length,
+      note: 'Verify identity documents and account names.',
     },
     {
       key: 'withdraw',
-      title: '待处理提现申请',
-      count: withdraws.filter((item) => item.status === '待审核').length,
-      note: '建议财务优先核对收款方式与账号。',
+      title: 'Pending Withdrawals',
+      count: withdraws.filter((item) => item.status === '待审核' || item.status === 'under_review').length,
+      note: 'Verify payout accounts before approving.',
+    },
+    {
+      key: 'recharge',
+      title: 'Pending Recharges',
+      count: recharges.filter((item) => item.status === 'under_review' || item.status === '待审核').length,
+      note: 'Confirm payment and credit user balance.',
     },
   ]
 }
@@ -142,13 +150,19 @@ export function AdminDashboard({
   onReviewTaskClaim,
   onReviewWithdraw,
   onReviewVerification,
+  onReviewRecharge,
+  onFreezeUser,
+  onEditUser,
+  onSaveVipLevels,
+  onSaveRules,
+  onReviewOrder,
   adminData,
   platformData,
   onSavePlatform,
   adminUsername,
 }) {
   const [collapsed, setCollapsed] = useState(false)
-  const [activeKey, setActiveKey] = useState('frontendContent')
+  const [activeKey, setActiveKey] = useState('dashboard')
   const [selectedTaskId, setSelectedTaskId] = useState(platformData.tasks[0]?.id)
   const [filters, setFilters] = useState(initialFilters)
   const [appliedFilters, setAppliedFilters] = useState(initialFilters)
@@ -167,6 +181,11 @@ export function AdminDashboard({
   const [processingClaimId, setProcessingClaimId] = useState(null)
   const [processingWithdrawId, setProcessingWithdrawId] = useState(null)
   const [processingVerificationId, setProcessingVerificationId] = useState(null)
+  const [processingRechargeId, setProcessingRechargeId] = useState(null)
+  const [processingUserId, setProcessingUserId] = useState(null)
+  const [processingOrderNo, setProcessingOrderNo] = useState(null)
+  const [savingVip, setSavingVip] = useState(false)
+  const [savingRules, setSavingRules] = useState(false)
 
   const statsGroups = adminData?.statsGroups ?? []
   const taskClaims = adminData?.taskClaims ?? []
@@ -193,7 +212,7 @@ export function AdminDashboard({
     [appliedFilters, orders, platformData.tasks, recharges, rules, taskClaims, verifications, users, vipLevels, withdraws],
   )
 
-  const workQueue = useMemo(() => buildWorkQueue(taskClaims, verifications, withdraws), [taskClaims, verifications, withdraws])
+  const workQueue = useMemo(() => buildWorkQueue(taskClaims, verifications, withdraws, recharges), [taskClaims, verifications, withdraws, recharges])
   const currentRows = datasets[activeKey] ?? platformData.tasks
   const dynamicStats = buildDynamicStats(Array.isArray(currentRows) ? currentRows : [])
   const pageTitle = pageTitles[activeKey]
@@ -240,6 +259,15 @@ export function AdminDashboard({
     }
   }
 
+  const reviewRecharge = async (row, action, reason = '') => {
+    setProcessingRechargeId(row.id)
+    try {
+      await onReviewRecharge?.(row.id, action, reason)
+    } finally {
+      setProcessingRechargeId(null)
+    }
+  }
+
   const renderCurrentSection = () => {
     switch (activeKey) {
       case 'frontendContent':
@@ -257,7 +285,28 @@ export function AdminDashboard({
             rows={datasets.frontendTasks}
             page={pages.frontendTasks}
             onPageChange={(page) => setPage('frontendTasks', page)}
-            onSelect={setSelectedTaskId}
+            onSelect={(id) => {
+              setSelectedTaskId(id)
+              setActiveKey('frontendContent')
+            }}
+            onAddTask={(newTask) => {
+              savePlatform((prev) => {
+                const newId = Math.max(0, ...prev.tasks.map((t) => t.id)) + 1
+                const task = { ...newTask, id: newId }
+                return {
+                  ...prev,
+                  tasks: [...prev.tasks, task],
+                  featuredTasks: [...prev.featuredTasks, task],
+                }
+              })
+            }}
+            onDeleteTask={(taskId) => {
+              savePlatform((prev) => ({
+                ...prev,
+                tasks: prev.tasks.filter((t) => t.id !== taskId),
+                featuredTasks: prev.featuredTasks.filter((t) => t.id !== taskId),
+              }))
+            }}
           />
         )
       case 'taskClaims':
@@ -272,7 +321,22 @@ export function AdminDashboard({
           />
         )
       case 'users':
-        return <UserTable rows={datasets.users} page={pages.users} onPageChange={(page) => setPage('users', page)} />
+        return (
+          <UserTable
+            rows={datasets.users}
+            page={pages.users}
+            onPageChange={(page) => setPage('users', page)}
+            processingId={processingUserId}
+            onFreezeUser={async (userId, action) => {
+              setProcessingUserId(userId)
+              try { await onFreezeUser?.(userId, action) } finally { setProcessingUserId(null) }
+            }}
+            onEditUser={async (userId, body) => {
+              setProcessingUserId(userId)
+              try { await onEditUser?.(userId, body) } finally { setProcessingUserId(null) }
+            }}
+          />
+        )
       case 'verifications':
         return (
           <VerificationTable
@@ -285,13 +349,57 @@ export function AdminDashboard({
           />
         )
       case 'vip':
-        return <VIPTable rows={datasets.vip} page={pages.vip} onPageChange={(page) => setPage('vip', page)} />
+        return (
+          <VIPTable
+            rows={datasets.vip}
+            page={pages.vip}
+            onPageChange={(page) => setPage('vip', page)}
+            saving={savingVip}
+            onSaveVipLevels={async (levels) => {
+              setSavingVip(true)
+              try { await onSaveVipLevels?.(levels) } finally { setSavingVip(false) }
+            }}
+          />
+        )
       case 'rules':
-        return <RuleTable rows={datasets.rules} page={pages.rules} onPageChange={(page) => setPage('rules', page)} />
+        return (
+          <RuleTable
+            rows={datasets.rules}
+            saving={savingRules}
+            onSaveRules={async (rules) => {
+              setSavingRules(true)
+              try { await onSaveRules?.(rules) } finally { setSavingRules(false) }
+            }}
+          />
+        )
       case 'orders':
-        return <OrderTable rows={datasets.orders} page={pages.orders} onPageChange={(page) => setPage('orders', page)} />
+        return (
+          <OrderTable
+            rows={datasets.orders}
+            page={pages.orders}
+            onPageChange={(page) => setPage('orders', page)}
+            processingId={processingOrderNo}
+            onApprove={async (row) => {
+              setProcessingOrderNo(row.orderNo)
+              try { await onReviewOrder?.(row.orderNo, 'approve') } finally { setProcessingOrderNo(null) }
+            }}
+            onReject={async (row) => {
+              setProcessingOrderNo(row.orderNo)
+              try { await onReviewOrder?.(row.orderNo, 'reject') } finally { setProcessingOrderNo(null) }
+            }}
+          />
+        )
       case 'recharge':
-        return <RechargeTable rows={datasets.recharge} page={pages.recharge} onPageChange={(page) => setPage('recharge', page)} />
+        return (
+          <RechargeTable
+            rows={datasets.recharge}
+            page={pages.recharge}
+            onPageChange={(page) => setPage('recharge', page)}
+            processingId={processingRechargeId}
+            onApprove={(row) => reviewRecharge(row, 'approve')}
+            onReject={(row, reason) => reviewRecharge(row, 'reject', reason)}
+          />
+        )
       case 'withdraw':
       default:
         return (

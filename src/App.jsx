@@ -214,6 +214,37 @@ function App() {
             if (frontendToken) await refreshFrontendData(frontendToken)
             showToast(action === 'approve' ? 'Verification approved' : 'Verification rejected', result.message)
           }}
+          onReviewRecharge={async (requestId, action, reason = '') => {
+            const result = await api.reviewRechargeRequest(token, requestId, action, reason)
+            setAdminData((prev) => ({ ...(prev ?? {}), ...result.adminData }))
+            if (frontendToken) await refreshFrontendData(frontendToken)
+            showToast(action === 'approve' ? 'Recharge approved' : 'Recharge rejected', result.message)
+          }}
+          onFreezeUser={async (userId, action) => {
+            const result = await api.freezeUser(token, userId, action)
+            setAdminData((prev) => ({ ...(prev ?? {}), users: result.users }))
+            showToast(action === 'freeze' ? 'User frozen' : 'User unfrozen', result.message)
+          }}
+          onEditUser={async (userId, body) => {
+            const result = await api.editUser(token, userId, body)
+            setAdminData((prev) => ({ ...(prev ?? {}), users: result.users }))
+            showToast('User updated', result.message)
+          }}
+          onSaveVipLevels={async (levels) => {
+            const result = await api.saveVipLevels(token, levels)
+            setAdminData((prev) => ({ ...(prev ?? {}), vipLevels: result.vipLevels }))
+            showToast('VIP levels saved', result.message)
+          }}
+          onSaveRules={async (rules) => {
+            const result = await api.saveRules(token, rules)
+            setAdminData((prev) => ({ ...(prev ?? {}), rules: result.rules }))
+            showToast('Rules saved', result.message)
+          }}
+          onReviewOrder={async (orderNo, action) => {
+            const result = await api.reviewOrder(token, orderNo, action)
+            setAdminData((prev) => ({ ...(prev ?? {}), ...result.adminData }))
+            showToast(action === 'approve' ? 'Order approved' : 'Order rejected', result.message)
+          }}
           onChangePassword={async (body) => {
             const result = await api.changePassword(token, body)
             showToast('Password updated', 'Use the new password next time you sign in.')
@@ -262,6 +293,12 @@ function App() {
           }}
           onCreateWithdrawRequest={async (payload) => {
             const result = await api.createWithdrawRequest(frontendToken, payload)
+            setPlatformData(derivePlatformData(result.platformData))
+            if (token) refreshAdminData(token).catch(() => {})
+            return result
+          }}
+          onCreateRechargeRequest={async (payload) => {
+            const result = await api.createRechargeRequest(frontendToken, payload)
             setPlatformData(derivePlatformData(result.platformData))
             if (token) refreshAdminData(token).catch(() => {})
             return result

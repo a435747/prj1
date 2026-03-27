@@ -37,6 +37,10 @@ export const api = {
     request(`/platform/task-claims/${claimId}/submit`, { method: 'POST', body: { proofText }, token }),
   createWithdrawRequest: (token, body) => request('/platform/withdraw-requests', { method: 'POST', body, token }),
 
+  createRechargeRequest: (token, body) => request('/platform/recharge-requests', { method: 'POST', body, token }),
+  reviewRechargeRequest: (token, requestId, action, reason = '') =>
+    request(`/admin/recharge-requests/${requestId}/review`, { method: 'POST', body: { action, reason }, token }),
+
   savePlatform: (token, body) => request('/platform', { method: 'PUT', body, token }),
   getAdminData: (token) => request('/admin/data', { token }),
   reviewTaskClaim: (token, claimId, action, reason = '') =>
@@ -45,4 +49,15 @@ export const api = {
     request(`/admin/withdraw-requests/${requestId}/review`, { method: 'POST', body: { action, reason }, token }),
   reviewVerification: (token, verificationId, action, reason = '') =>
     request(`/admin/verifications/${verificationId}/review`, { method: 'POST', body: { action, reason }, token }),
+
+  freezeUser: (token, userId, action) =>
+    request(`/admin/users/${userId}/freeze`, { method: 'POST', body: { action }, token }),
+  editUser: (token, userId, body) =>
+    request(`/admin/users/${userId}/edit`, { method: 'POST', body, token }),
+  saveVipLevels: (token, vipLevels) =>
+    request('/admin/vip-levels', { method: 'POST', body: { vipLevels }, token }),
+  saveRules: (token, rules) =>
+    request('/admin/rules', { method: 'POST', body: { rules }, token }),
+  reviewOrder: (token, orderNo, action) =>
+    request(`/admin/orders/${orderNo}/review`, { method: 'POST', body: { action }, token }),
 }

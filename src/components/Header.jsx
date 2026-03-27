@@ -1,4 +1,4 @@
-export function Header({ title }) {
+export function Header({ title, onVipClick }) {
   return (
     <header className="fixed inset-x-0 top-0 z-40 mx-auto w-full max-w-md bg-black/95 px-4 pb-4 pt-4 text-white shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-md">
       <div className="mx-auto flex max-w-md items-center justify-between">
@@ -8,9 +8,13 @@ export function Header({ title }) {
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
         </div>
-        <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-white/70">
-          VIP Access
-        </div>
+        <button
+          type="button"
+          onClick={onVipClick}
+          className="rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-yellow-400/10 px-3 py-1 text-xs font-semibold text-amber-300 transition hover:border-amber-400/70 hover:bg-amber-400/20 active:scale-95"
+        >
+          ✦ VIP Access
+        </button>
       </div>
     </header>
   )

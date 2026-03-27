@@ -1,5 +1,11 @@
 export const sidebarMenus = [
   {
+    title: '首页',
+    items: [
+      { key: 'dashboard', label: '管理员主页' },
+    ],
+  },
+  {
     title: '前台管理',
     items: [
       { key: 'frontendContent', label: '前台内容' },

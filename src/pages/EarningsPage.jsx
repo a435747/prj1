@@ -8,7 +8,7 @@ function withdrawTone(status) {
   return 'bg-blue-50 text-blue-600'
 }
 
-export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, withdrawSubmitting }) {
+export function EarningsPage({ platformData, verification, onFeedClick, onCreateWithdraw, withdrawSubmitting }) {
   const [error, setError] = useState('')
   const feed = platformData?.earningsFeed ?? fallbackFeed
   const claimedTasks = platformData?.claimedTasks ?? []
@@ -19,6 +19,8 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
   const withdrawableAmount = Number(String(withdrawable).replace(/[^\d.]/g, '')) || 0
   const approvedWithdraws = withdrawRequests.filter((item) => item.status === '已通过' || item.status === 'approved').length
   const rejectedWithdraws = withdrawRequests.filter((item) => item.status === '已驳回' || item.status === 'rejected').length
+  const withdrawProgress = platformData?.withdrawProgress ?? null
+  const withdrawLocked = withdrawProgress ? !withdrawProgress.met : false
 
   return (
     <div className="space-y-4">
@@ -52,13 +54,58 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
           <h3 className="mt-1 text-lg font-semibold text-slate-900">Create Withdrawal Request</h3>
           <p className="mt-2 text-sm leading-6 text-slate-500">For account safety, please use a payout method that matches your verified identity information. Large withdrawals may require additional review.</p>
         </div>
+
+        {withdrawProgress && withdrawProgress.requiredScore > 0 && (
+          <div className={`mb-4 rounded-2xl border p-4 ${
+            withdrawProgress.met
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-amber-200 bg-amber-50'
+          }`}>
+            <div className="mb-2 flex items-center justify-between">
+              <p className={`text-xs font-semibold ${
+                withdrawProgress.met ? 'text-emerald-700' : 'text-amber-700'
+              }`}>
+                {withdrawProgress.met ? '✓ 提现条件已满足' : '⚠ 提现条件未达标'}
+              </p>
+              <p className={`text-xs font-bold ${
+                withdrawProgress.met ? 'text-emerald-700' : 'text-amber-700'
+              }`}>
+                {withdrawProgress.completedScore.toFixed(1)} / {withdrawProgress.requiredScore} 积分
+              </p>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/60">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  withdrawProgress.met ? 'bg-emerald-500' : 'bg-amber-400'
+                }`}
+                style={{ width: `${Math.min(100, (withdrawProgress.completedScore / withdrawProgress.requiredScore) * 100).toFixed(1)}%` }}
+              />
+            </div>
+            {!withdrawProgress.met && (
+              <p className="mt-2 text-xs text-amber-600">
+                当前规则「{withdrawProgress.activeRuleName}」要求完成 {withdrawProgress.requiredScore} 积分任务后方可提现，还差 {(withdrawProgress.requiredScore - withdrawProgress.completedScore).toFixed(1)} 积分。每个任务完成后按其倍率计入积分。
+              </p>
+            )}
+          </div>
+        )}
+
         <form
           className="space-y-3"
           onSubmit={async (event) => {
             event.preventDefault()
+            const isVerified = verification?.status === 'approved' || verification?.status === '已通过'
+            if (!isVerified) {
+              setError('Please complete real-name verification before withdrawing.')
+              return
+            }
+            if (withdrawLocked) {
+              setError(`提现条件未达标：需完成 ${withdrawProgress.requiredScore} 积分，当前 ${withdrawProgress.completedScore.toFixed(1)} 积分。`)
+              return
+            }
             const formData = new FormData(event.currentTarget)
             const amount = String(formData.get('amount') || '').trim()
             const accountType = String(formData.get('accountType') || '').trim()
+            const bankName = String(formData.get('bankName') || '').trim()
             const accountNo = String(formData.get('accountNo') || '').trim()
             const numericAmount = Number(amount)
 
@@ -78,7 +125,7 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
             }
 
             setError('')
-            await onCreateWithdraw?.({ amount, accountType, accountNo })
+            await onCreateWithdraw?.({ amount, accountType, bankName, accountNo })
             event.currentTarget.reset()
           }}
         >
@@ -99,6 +146,11 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
             </select>
           </div>
           <input
+            name="bankName"
+            placeholder="Bank name (e.g. Chase, HSBC) — leave blank for crypto"
+            className="h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          />
+          <input
             name="accountNo"
             placeholder="Payout account / wallet address"
             className="h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
@@ -106,10 +158,10 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
           <button
             type="submit"
-            disabled={withdrawSubmitting}
+            disabled={withdrawSubmitting || withdrawLocked}
             className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
           >
-            {withdrawSubmitting ? 'Submitting...' : 'Submit Withdrawal Request'}
+            {withdrawSubmitting ? 'Submitting...' : withdrawLocked ? '任务积分不足，暂不可提现' : 'Submit Withdrawal Request'}
           </button>
         </form>
       </section>

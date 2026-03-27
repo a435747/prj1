@@ -5,10 +5,10 @@ import {
   tasks,
 } from '../data/mock.js'
 
-const BASE_BALANCE = 1286
-const BASE_COMPLETED = 128
-const BASE_WITHDRAWABLE = 860
-const BASE_TODAY_EARNINGS = 286
+const BASE_BALANCE = 0
+const BASE_COMPLETED = 0
+const BASE_WITHDRAWABLE = 0
+const BASE_TODAY_EARNINGS = 0
 const BASE_ONLINE_COUNT = '18,426'
 
 function isCompletedStatus(status) {
@@ -31,61 +31,9 @@ function isPendingProofStatus(status) {
   return status === '待提交' || status === 'pending_proof'
 }
 
-const claimedTasks = [
-  {
-    id: 'claim-1001',
-    taskId: 103,
-    username: 'Aurora',
-    title: 'High-Commission Store Video',
-    amount: '$168',
-    status: 'completed',
-    createdAt: 'Today 09:20',
-    submittedAt: 'Today 10:05',
-    reviewedAt: 'Today 10:30',
-    proofText: 'Uploaded the store video and exterior screenshots.',
-    image: tasks.find((task) => task.id === 103)?.image,
-    summary: 'The video verification task was approved and the reward has been added to your balance.',
-  },
-  {
-    id: 'claim-1002',
-    taskId: 105,
-    username: 'Aurora',
-    title: 'Livestream Engagement Task',
-    amount: '$22',
-    status: 'pending_proof',
-    createdAt: 'Today 11:45',
-    submittedAt: '',
-    reviewedAt: '',
-    proofText: '',
-    image: tasks.find((task) => task.id === 105)?.image,
-    summary: 'Task claimed successfully. Please submit your proof to continue.',
-  },
-]
+const claimedTasks = []
 
-const withdrawRequests = [
-  {
-    id: 'withdraw-1001',
-    username: 'Aurora',
-    amount: '$120',
-    status: 'approved',
-    createdAt: 'Today 08:10',
-    reviewedAt: 'Today 08:25',
-    accountType: 'USDT',
-    accountNo: 'TRC20 / TXXXXXX8899',
-    summary: 'Your withdrawal request was approved and paid out.',
-  },
-  {
-    id: 'withdraw-1002',
-    username: 'Aurora',
-    amount: '$88',
-    status: 'under_review',
-    createdAt: 'Today 12:10',
-    reviewedAt: '',
-    accountType: 'Alipay',
-    accountNo: 'aurora***@mail.com',
-    summary: 'Your withdrawal request has been submitted and is waiting for review.',
-  },
-]
+const withdrawRequests = []
 
 function parseDollar(value) {
   return Number(String(value ?? 0).replace('$', '')) || 0
@@ -143,18 +91,21 @@ function buildProfile(taskClaims, withdraws) {
   const withdrawable = BASE_WITHDRAWABLE + approvedIncome - approvedWithdrawAmount - pendingWithdrawAmount
 
   return {
-    name: 'Premium Member · Aurora',
+    name: 'Premium Member',
     subtitle: `${taskClaims.length} tasks claimed / ${withdraws.length} withdrawals made`,
+    rechargeRequests: [],
+    // name is overridden in FrontendApp with actual username
     stats: [
       { label: 'Balance', value: `$${balance.toFixed(0)}` },
       { label: 'Completed', value: `${BASE_COMPLETED + completed}` },
       { label: 'Withdrawable', value: `$${Math.max(0, withdrawable).toFixed(0)}` },
     ],
-    menus: ['Withdrawal Records', 'Task Records', 'Real-Name Verification', 'Security Center'],
+    menus: ['Recharge', 'Withdrawal Records', 'Task Records', 'Real-Name Verification', 'Security Center'],
   }
 }
 
 export const initialPlatformData = {
+  supportLink: '',  // Set via admin backend
   homeStats: buildHomeStats(claimedTasks, withdrawRequests),
   tickerItems,
   featuredTasks: tasks.slice(0, 3).map((task) => ({
@@ -175,14 +126,48 @@ export const initialPlatformData = {
   profile: buildProfile(claimedTasks, withdrawRequests),
 }
 
+function buildWithdrawProgress(taskClaims, allTasks, rules) {
+  const completedClaims = taskClaims.filter(
+    (c) => c.status === '已完成' || c.status === 'completed',
+  )
+  const completedScore = completedClaims.reduce((sum, claim) => {
+    const task = (allTasks ?? []).find((t) => t.id === claim.taskId)
+    const multiplier = Number(task?.multiplier ?? 1)
+    return sum + multiplier
+  }, 0)
+
+  const completedCount = completedClaims.length
+  const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
+
+  const activeRule = (rules ?? []).find((r) => {
+    const name = String(r.name || '').toLowerCase()
+    if (vipLevel === 'VIP3' && name.includes('vip3')) return true
+    if (vipLevel === 'VIP2' && (name.includes('vip2') || name.includes('高佣'))) return true
+    return true
+  }) ?? (rules ?? [])[0] ?? null
+
+  const requiredScore = Number(activeRule?.requiredTaskCount ?? 0)
+
+  return {
+    completedScore,
+    requiredScore,
+    met: requiredScore <= 0 || completedScore >= requiredScore,
+    activeRuleName: activeRule?.name ?? '',
+  }
+}
+
 export function derivePlatformData(nextPlatform) {
   const taskClaims = nextPlatform.claimedTasks ?? []
   const withdraws = nextPlatform.withdrawRequests ?? []
+  const allTasks = nextPlatform.tasks ?? []
+  const rules = nextPlatform.rules ?? []
 
   return {
     ...nextPlatform,
+    rechargeRequests: nextPlatform.rechargeRequests ?? [],
     homeStats: buildHomeStats(taskClaims, withdraws, nextPlatform.homeStats),
     quickStats: buildQuickStats(taskClaims, withdraws),
     profile: buildProfile(taskClaims, withdraws),
+    withdrawProgress: buildWithdrawProgress(taskClaims, allTasks, rules),
   }
 }
