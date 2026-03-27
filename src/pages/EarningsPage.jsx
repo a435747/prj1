@@ -3,8 +3,8 @@ import { earningsFeed as fallbackFeed } from '../data/mock'
 import { SectionTitle } from '../components/SectionTitle'
 
 function withdrawTone(status) {
-  if (status === '已通过') return 'bg-emerald-50 text-emerald-600'
-  if (status === '已驳回') return 'bg-red-50 text-red-600'
+  if (status === '已通过' || status === 'approved') return 'bg-emerald-50 text-emerald-600'
+  if (status === '已驳回' || status === 'rejected') return 'bg-red-50 text-red-600'
   return 'bg-blue-50 text-blue-600'
 }
 
@@ -13,10 +13,12 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
   const feed = platformData?.earningsFeed ?? fallbackFeed
   const claimedTasks = platformData?.claimedTasks ?? []
   const withdrawRequests = platformData?.withdrawRequests ?? []
-  const completedCount = claimedTasks.filter((item) => item.status === '已完成').length
-  const reviewingCount = claimedTasks.filter((item) => item.status === '待审核').length
+  const completedCount = claimedTasks.filter((item) => item.status === '已完成' || item.status === 'completed').length
+  const reviewingCount = claimedTasks.filter((item) => item.status === '待审核' || item.status === 'under_review').length
   const withdrawable = platformData?.quickStats?.find((item) => item.label === 'Withdrawable')?.value ?? '$0'
   const withdrawableAmount = Number(String(withdrawable).replace(/[^\d.]/g, '')) || 0
+  const approvedWithdraws = withdrawRequests.filter((item) => item.status === '已通过' || item.status === 'approved').length
+  const rejectedWithdraws = withdrawRequests.filter((item) => item.status === '已驳回' || item.status === 'rejected').length
 
   return (
     <div className="space-y-4">
@@ -26,10 +28,29 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
         <p className="mt-2 text-sm text-white/80">{completedCount} tasks completed, {reviewingCount} under review.</p>
       </section>
 
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Available Now</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{withdrawable}</p>
+          <p className="mt-1 text-sm text-slate-500">Current amount available for withdrawal.</p>
+        </div>
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Approved</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{approvedWithdraws}</p>
+          <p className="mt-1 text-sm text-slate-500">Successful payout requests already processed.</p>
+        </div>
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Rejected</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{rejectedWithdraws}</p>
+          <p className="mt-1 text-sm text-slate-500">Requests requiring account correction or resubmission.</p>
+        </div>
+      </section>
+
       <section className="rounded-[28px] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
         <div className="mb-3">
           <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Withdraw</p>
           <h3 className="mt-1 text-lg font-semibold text-slate-900">Create Withdrawal Request</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">For account safety, please use a payout method that matches your verified identity information. Large withdrawals may require additional review.</p>
         </div>
         <form
           className="space-y-3"
@@ -118,6 +139,7 @@ export function EarningsPage({ platformData, onFeedClick, onCreateWithdraw, with
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-slate-500">{item.accountNo}</p>
+                {item.reviewedAt ? <p className="mt-2 text-xs text-slate-400">Reviewed at: {item.reviewedAt}</p> : null}
                 <p className="mt-2 text-sm text-slate-500">{item.summary}</p>
               </div>
             ))}

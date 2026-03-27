@@ -37,31 +37,32 @@ export function AccountPanel({ username, onSubmit }) {
   }
 
   return (
-    <section className="rounded-lg bg-white p-4 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-800">管理员账户设置</h3>
-        <p className="mt-1 text-sm text-slate-500">可修改登录账号，也可顺便重置密码。</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Account</p>
+        <h3 className="mt-2 text-base font-semibold text-slate-900">管理员账户设置</h3>
+        <p className="mt-1 text-sm text-slate-500">可修改登录账号，也可同步重置管理员密码。</p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <input
           type="password"
           placeholder="当前密码"
-          className="h-10 rounded-lg border border-slate-200 px-3 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className="h-11 rounded-xl border border-slate-200 px-3 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           value={form.currentPassword}
           onChange={(e) => setForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
         />
         <input
           type="text"
           placeholder="新账号"
-          className="h-10 rounded-lg border border-slate-200 px-3 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className="h-11 rounded-xl border border-slate-200 px-3 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           value={form.newUsername}
           onChange={(e) => setForm((prev) => ({ ...prev, newUsername: e.target.value }))}
         />
         <input
           type="password"
           placeholder="新密码（可选）"
-          className="h-10 rounded-lg border border-slate-200 px-3 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className="h-11 rounded-xl border border-slate-200 px-3 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           value={form.newPassword}
           onChange={(e) => setForm((prev) => ({ ...prev, newPassword: e.target.value }))}
         />
@@ -69,7 +70,7 @@ export function AccountPanel({ username, onSubmit }) {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-60"
+            className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-60"
           >
             {loading ? '提交中...' : '更新账户'}
           </button>

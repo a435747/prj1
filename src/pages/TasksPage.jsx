@@ -50,7 +50,7 @@ export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile
           {visibleTasks.map((task) => {
             const claim = claimMap.get(task.id)
             const submitting = submittingTaskId === task.id
-            const disabled = Boolean(claim && claim.status !== '已驳回') || submitting
+            const disabled = Boolean(claim && claim.status !== '已驳回' && claim.status !== 'rejected') || submitting
 
             return (
               <article
@@ -75,11 +75,11 @@ export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile
                                 : 'bg-amber-500'
                         }`}
                       >
-                        {claim.status === '已完成'
+                        {claim.status === '已完成' || claim.status === 'completed'
                           ? 'Completed'
-                          : claim.status === '已驳回'
+                          : claim.status === '已驳回' || claim.status === 'rejected'
                             ? 'Rejected'
-                            : claim.status === '待审核'
+                            : claim.status === '待审核' || claim.status === 'under_review'
                               ? 'Reviewing'
                               : 'Pending Proof'}
                       </span>
@@ -103,13 +103,13 @@ export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile
                   onClick={() => onStartTask?.(task)}
                   className="mt-2 w-full rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:bg-slate-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
-                  {claim?.status === '已完成'
+                  {claim?.status === '已完成' || claim?.status === 'completed'
                     ? 'Completed'
-                    : claim?.status === '待审核'
+                    : claim?.status === '待审核' || claim?.status === 'under_review'
                       ? 'Awaiting Review'
-                      : claim?.status === '待提交'
+                      : claim?.status === '待提交' || claim?.status === 'pending_proof'
                         ? 'Submit Proof In Profile'
-                        : claim?.status === '已驳回'
+                        : claim?.status === '已驳回' || claim?.status === 'rejected'
                           ? 'Claim Again'
                           : submitting
                             ? 'Submitting...'

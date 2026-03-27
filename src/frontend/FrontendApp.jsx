@@ -11,6 +11,10 @@ import { RealNamePage } from '../pages/RealNamePage'
 import { SecurityCenterPage } from '../pages/SecurityCenterPage'
 import { TasksPage } from '../pages/TasksPage'
 
+function isRejectedStatus(status) {
+  return status === '已驳回' || status === 'rejected'
+}
+
 export function FrontendApp({
   platformData,
   onClaimTask,
@@ -48,7 +52,7 @@ export function FrontendApp({
     if (submittingTaskId === task.id) return
 
     const exists = (platformData.claimedTasks ?? []).some(
-      (item) => item.taskId === task.id && item.status !== '已驳回',
+      (item) => item.taskId === task.id && !isRejectedStatus(item.status),
     )
 
     if (exists) {

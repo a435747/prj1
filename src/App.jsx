@@ -196,14 +196,14 @@ function App() {
             setPlatformData(derivePlatformData(saved))
             showToast('Saved successfully', 'Frontend content has been synced to the server.')
           }}
-          onReviewTaskClaim={async (claimId, action) => {
-            const result = await api.reviewTaskClaim(token, claimId, action)
+          onReviewTaskClaim={async (claimId, action, reason = '') => {
+            const result = await api.reviewTaskClaim(token, claimId, action, reason)
             setPlatformData(derivePlatformData(result.platformData))
             setAdminData(result.adminData)
             showToast(action === 'approve' ? 'Review approved' : 'Rejected', result.message)
           }}
-          onReviewWithdraw={async (requestId, action) => {
-            const result = await api.reviewWithdrawRequest(token, requestId, action)
+          onReviewWithdraw={async (requestId, action, reason = '') => {
+            const result = await api.reviewWithdrawRequest(token, requestId, action, reason)
             setPlatformData(derivePlatformData(result.platformData))
             setAdminData(result.adminData)
             showToast(action === 'approve' ? 'Withdrawal approved' : 'Withdrawal rejected', result.message)

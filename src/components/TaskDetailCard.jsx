@@ -1,3 +1,12 @@
+function getStatusLabel(status) {
+  if (status === '已完成') return 'Completed'
+  if (status === '已驳回') return 'Rejected'
+  if (status === '待审核') return 'Under Review'
+  if (status === '待提交') return 'Pending Proof'
+  if (status === '已通过') return 'Approved'
+  return status || 'Unknown'
+}
+
 function StarRow({ rating }) {
   const filled = Math.round(rating)
 
@@ -17,10 +26,10 @@ function StarRow({ rating }) {
 }
 
 function getActionLabel(claim, submitting) {
-  if (claim?.status === '已完成') return 'Completed'
-  if (claim?.status === '待审核') return 'Awaiting Review'
-  if (claim?.status === '待提交') return 'Submit Proof In Profile'
-  if (claim?.status === '已驳回') return 'Claim Again'
+  if (claim?.status === '已完成' || claim?.status === 'completed') return 'Completed'
+  if (claim?.status === '待审核' || claim?.status === 'under_review') return 'Awaiting Review'
+  if (claim?.status === '待提交' || claim?.status === 'pending_proof') return 'Submit Proof In Profile'
+  if (claim?.status === '已驳回' || claim?.status === 'rejected') return 'Claim Again'
   if (submitting) return 'Submitting...'
   return 'Start Task'
 }
@@ -30,7 +39,7 @@ export function TaskDetailCard({ task, claim, submitting, onStart, onOpenProfile
     return null
   }
 
-  const disabled = Boolean(claim && claim.status !== '已驳回') || submitting
+  const disabled = Boolean(claim && claim.status !== '已驳回' && claim.status !== 'rejected') || submitting
 
   return (
     <div className="overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-slate-900 to-zinc-950 p-[1px] shadow-[0_20px_45px_rgba(15,23,42,0.18)]">
@@ -57,13 +66,13 @@ export function TaskDetailCard({ task, claim, submitting, onStart, onOpenProfile
                         ? 'bg-blue-50 text-blue-600'
                         : 'bg-amber-50 text-amber-600'
                 }`}>
-                  {claim.status}
+                  {getStatusLabel(claim.status)}
                 </span>
               ) : null}
             </div>
           </div>
           <div className="rounded-2xl bg-amber-50 px-3 py-2 text-right">
-            <p className="text-[11px] text-amber-500">预计佣金</p>
+            <p className="text-[11px] text-amber-500">Estimated Commission</p>
             <p className="text-lg font-bold text-amber-600">{task.commission}</p>
           </div>
         </div>
@@ -99,7 +108,7 @@ export function TaskDetailCard({ task, claim, submitting, onStart, onOpenProfile
           type="button"
           disabled={disabled}
           onClick={() => {
-            if (claim && claim.status !== '已驳回') {
+            if (claim && claim.status !== '已驳回' && claim.status !== 'rejected') {
               onOpenProfile?.()
               return
             }

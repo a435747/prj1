@@ -1,15 +1,15 @@
 import { useState } from 'react'
 
 function statusTone(status) {
-  if (status === '已通过') return 'text-emerald-600 bg-emerald-50 border-emerald-200'
-  if (status === '已驳回') return 'text-red-600 bg-red-50 border-red-200'
+  if (status === '已通过' || status === 'approved') return 'text-emerald-600 bg-emerald-50 border-emerald-200'
+  if (status === '已驳回' || status === 'rejected') return 'text-red-600 bg-red-50 border-red-200'
   return 'text-amber-600 bg-amber-50 border-amber-200'
 }
 
 function statusLabel(status) {
-  if (status === '已通过') return 'Approved'
-  if (status === '已驳回') return 'Rejected'
-  if (status === '待认证') return 'Not Verified'
+  if (status === '已通过' || status === 'approved') return 'Approved'
+  if (status === '已驳回' || status === 'rejected') return 'Rejected'
+  if (status === '待认证' || status === 'not_verified') return 'Not Verified'
   return 'Under Review'
 }
 
@@ -17,8 +17,8 @@ export function RealNamePage({ verification, onSubmit }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const status = verification?.status || '待认证'
-  const canResubmit = !verification || verification.status === '已驳回'
+  const status = verification?.status || 'not_verified'
+  const canResubmit = !verification || verification.status === '已驳回' || verification.status === 'rejected'
 
   return (
     <div className="space-y-4">
@@ -43,6 +43,18 @@ export function RealNamePage({ verification, onSubmit }) {
             </div>
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-500">{verification?.summary || 'Fill in the information below and submit it for review.'}</p>
+          {verification ? (
+            <div className="mt-4 grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-600 sm:grid-cols-2">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Real Name</p>
+                <p className="mt-1 font-medium text-slate-800">{verification.realName || '--'}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Account Name</p>
+                <p className="mt-1 font-medium text-slate-800">{verification.accountName || '--'}</p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <form

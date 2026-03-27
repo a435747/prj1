@@ -1,32 +1,33 @@
 export function Sidebar({ collapsed, activeKey, onSelect, onToggle, menus }) {
   return (
     <aside
-      className={`flex h-screen shrink-0 flex-col bg-[#1f2d3d] text-white transition-all duration-300 ${
-        collapsed ? 'w-[76px]' : 'w-[220px]'
+      className={`flex h-screen shrink-0 flex-col border-r border-white/10 bg-[linear-gradient(180deg,#0f172a,#111827_40%,#020617)] text-white transition-all duration-300 ${
+        collapsed ? 'w-[82px]' : 'w-[250px]'
       }`}
     >
-      <div className="flex h-[60px] items-center justify-between border-b border-white/10 px-4">
-        <span className={`text-sm font-semibold tracking-wide ${collapsed ? 'hidden' : 'block'}`}>
-          Task Admin
-        </span>
+      <div className="flex h-[72px] items-center justify-between border-b border-white/10 px-4">
+        <div className={collapsed ? 'hidden' : 'block'}>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-white/35">Admin Console</p>
+          <p className="mt-1 text-sm font-semibold tracking-wide text-white">Money Task Platform</p>
+        </div>
         <button
           type="button"
           onClick={onToggle}
-          className="rounded-md px-2 py-1 text-xs text-white/80 transition hover:bg-white/10 hover:text-white active:scale-95"
+          className="rounded-xl border border-white/10 px-2.5 py-1.5 text-xs text-white/80 transition hover:bg-white/10 hover:text-white active:scale-95"
         >
           {collapsed ? '→' : '←'}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-4">
+      <div className="flex-1 overflow-y-auto px-3 py-4">
         {menus.map((group) => (
-          <div key={group.title} className="mb-5">
+          <div key={group.title} className="mb-6">
             {!collapsed ? (
-              <p className="mb-2 px-3 text-xs font-medium tracking-[0.2em] text-white/40">
+              <p className="mb-2 px-3 text-[11px] font-medium uppercase tracking-[0.26em] text-white/35">
                 {group.title}
               </p>
             ) : null}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {group.items.map((item) => {
                 const active = item.key === activeKey
                 return (
@@ -34,14 +35,14 @@ export function Sidebar({ collapsed, activeKey, onSelect, onToggle, menus }) {
                     key={item.key}
                     type="button"
                     onClick={() => onSelect(item.key)}
-                    className={`flex w-full items-center rounded-r-lg border-l-4 px-3 py-2.5 text-sm transition ${
+                    className={`flex w-full items-center rounded-2xl px-3 py-3 text-sm transition ${
                       active
-                        ? 'border-l-blue-500 bg-white/10 text-white'
-                        : 'border-l-transparent text-white/70 hover:bg-white/6 hover:text-white'
+                        ? 'bg-white text-slate-900 shadow-[0_10px_24px_rgba(255,255,255,0.12)]'
+                        : 'text-white/70 hover:bg-white/8 hover:text-white'
                     }`}
                     title={item.label}
                   >
-                    <span className="truncate">{collapsed ? item.label.slice(0, 2) : item.label}</span>
+                    <span className="truncate font-medium">{collapsed ? item.label.slice(0, 2) : item.label}</span>
                   </button>
                 )
               })}

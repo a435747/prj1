@@ -310,7 +310,7 @@ app.post('/api/frontend-auth/change-password', frontendAuth, (req, res) => {
     )),
   }))
 
-  return res.json({ message: '密码修改成功' })
+  return res.json({ message: 'Password updated successfully.' })
 })
 
 app.post('/api/frontend-auth/verification', frontendAuth, (req, res) => {
@@ -372,7 +372,7 @@ app.post('/api/auth/change-password', adminAuth, (req, res) => {
     },
   }))
 
-  return res.json({ message: '密码修改成功' })
+  return res.json({ message: 'Password updated successfully.' })
 })
 
 app.post('/api/auth/change-account', adminAuth, (req, res) => {
@@ -471,13 +471,13 @@ app.post('/api/platform/claim-task', frontendAuth, (req, res) => {
           id: Date.now(),
           user: claim.username,
           amount: claim.amount,
-          text: `刚刚领取了 ${claim.title}，当前状态：待提交凭证。`,
+          text: `Just claimed ${claim.title}. Current status: pending proof submission.`,
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
           image: claim.image,
         },
         ...(nextUsers[userIndex].platformData.earningsFeed ?? []),
       ].slice(0, 12),
-      tickerItems: [`${claim.username} 刚刚领取 ${claim.title}，请提交任务凭证`, ...(nextUsers[userIndex].platformData.tickerItems ?? [])].slice(0, 12),
+      tickerItems: [`${claim.username} just claimed ${claim.title}. Please submit proof next.`, ...(nextUsers[userIndex].platformData.tickerItems ?? [])].slice(0, 12),
     })
 
     nextUsers[userIndex] = { ...nextUsers[userIndex], platformData: nextPlatform }
@@ -536,13 +536,13 @@ app.post('/api/platform/task-claims/:claimId/submit', frontendAuth, (req, res) =
           id: Date.now(),
           user: updatedClaim.username,
           amount: updatedClaim.amount,
-          text: `${updatedClaim.title} 的完成凭证已提交，等待审核。`,
+          text: `${updatedClaim.title} proof has been submitted and is now waiting for review.`,
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
           image: updatedClaim.image,
         },
         ...(nextUsers[userIndex].platformData.earningsFeed ?? []),
       ].slice(0, 12),
-      tickerItems: [`${updatedClaim.username} 提交了 ${updatedClaim.title} 的任务凭证`, ...(nextUsers[userIndex].platformData.tickerItems ?? [])].slice(0, 12),
+      tickerItems: [`${updatedClaim.username} submitted proof for ${updatedClaim.title}.`, ...(nextUsers[userIndex].platformData.tickerItems ?? [])].slice(0, 12),
     })
 
     nextUsers[userIndex] = { ...nextUsers[userIndex], platformData: nextPlatform }
@@ -611,13 +611,13 @@ app.post('/api/platform/withdraw-requests', frontendAuth, (req, res) => {
           id: Date.now(),
           user: createdRequest.username,
           amount: createdRequest.amount,
-          text: `提交了 ${createdRequest.amount} 提现申请，状态：待审核。`,
+          text: `Submitted a withdrawal request for ${createdRequest.amount}. Current status: under review.`,
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
           image: current.platformData.tasks?.[0]?.image,
         },
         ...(nextUsers[userIndex].platformData.earningsFeed ?? []),
       ].slice(0, 12),
-      tickerItems: [`${createdRequest.username} 提交提现 ${createdRequest.amount}，等待审核`, ...(nextUsers[userIndex].platformData.tickerItems ?? [])].slice(0, 12),
+      tickerItems: [`${createdRequest.username} submitted a withdrawal request for ${createdRequest.amount}.`, ...(nextUsers[userIndex].platformData.tickerItems ?? [])].slice(0, 12),
     })
 
     nextUsers[userIndex] = { ...nextUsers[userIndex], platformData: nextPlatform }
@@ -684,7 +684,7 @@ app.get('/api/admin/data', adminAuth, (_req, res) => {
 
 app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
   const { claimId } = req.params
-  const { action } = req.body
+  const { action, reason } = req.body
 
   if (!['approve', 'reject'].includes(action)) {
     return res.status(400).json({ message: '无效审核操作' })
@@ -716,8 +716,8 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
       reviewedAt: formatTimestamp(),
       summary:
         action === 'approve'
-          ? `${nextClaims[targetClaimIndex].title} 已审核通过，奖励已计入账户余额。`
-          : `${nextClaims[targetClaimIndex].title} 未通过审核，请补充更清晰的任务凭证后重新提交。`,
+          ? `${nextClaims[targetClaimIndex].title} was approved and the reward has been credited to your balance.`
+          : `Task rejected: ${String(reason || 'Please upload clearer proof and submit again.').trim()}`,
     }
     nextClaims[targetClaimIndex] = updatedClaim
 
@@ -729,7 +729,7 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
           id: Date.now(),
           user: updatedClaim.username,
           amount: updatedClaim.amount,
-          text: action === 'approve' ? `${updatedClaim.title} 审核通过，奖励已到账。` : `${updatedClaim.title} 审核未通过，请重新提交任务凭证。`,
+          text: action === 'approve' ? `${updatedClaim.title} was approved and the reward has been credited.` : `${updatedClaim.title} was rejected. Please upload updated proof.`,
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
           image: updatedClaim.image,
         },
@@ -737,8 +737,8 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
       ].slice(0, 12),
       tickerItems: [
         action === 'approve'
-          ? `${updatedClaim.username} 的 ${updatedClaim.title} 审核通过，到账 ${updatedClaim.amount}`
-          : `${updatedClaim.username} 的 ${updatedClaim.title} 被驳回`,
+          ? `${updatedClaim.username}'s ${updatedClaim.title} was approved for ${updatedClaim.amount}`
+          : `${updatedClaim.username}'s ${updatedClaim.title} was rejected`,
         ...(nextUsers[targetUserIndex].platformData.tickerItems ?? []),
       ].slice(0, 12),
     })
@@ -776,7 +776,7 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
 
 app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res) => {
   const { requestId } = req.params
-  const { action } = req.body
+  const { action, reason } = req.body
 
   if (!['approve', 'reject'].includes(action)) {
     return res.status(400).json({ message: '无效审核操作' })
@@ -806,7 +806,9 @@ app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res)
       ...nextRequests[targetRequestIndex],
       status: action === 'approve' ? '已通过' : '已驳回',
       reviewedAt: formatTimestamp(),
-      summary: action === 'approve' ? '提现申请已审核通过，资金已安排打款。' : '提现申请已驳回，请检查账户信息后重新提交。',
+      summary: action === 'approve'
+        ? 'Your withdrawal request was approved and the payout has been arranged.'
+        : `Withdrawal request rejected: ${String(reason || 'Please check your account details and submit again.').trim()}`,
     }
     nextRequests[targetRequestIndex] = updatedRequest
 
@@ -818,7 +820,7 @@ app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res)
           id: Date.now(),
           user: updatedRequest.username,
           amount: updatedRequest.amount,
-          text: action === 'approve' ? `${updatedRequest.amount} 提现申请已通过。` : `${updatedRequest.amount} 提现申请已驳回。`,
+          text: action === 'approve' ? `${updatedRequest.amount} withdrawal request was approved.` : `${updatedRequest.amount} withdrawal request was rejected.`,
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
           image: current.platformData.tasks?.[0]?.image,
         },
@@ -826,8 +828,8 @@ app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res)
       ].slice(0, 12),
       tickerItems: [
         action === 'approve'
-          ? `${updatedRequest.username} 的提现 ${updatedRequest.amount} 已通过`
-          : `${updatedRequest.username} 的提现 ${updatedRequest.amount} 已驳回`,
+          ? `${updatedRequest.username}'s withdrawal ${updatedRequest.amount} was approved`
+          : `${updatedRequest.username}'s withdrawal ${updatedRequest.amount} was rejected`,
         ...(nextUsers[targetUserIndex].platformData.tickerItems ?? []),
       ].slice(0, 12),
     })
@@ -882,8 +884,8 @@ app.post('/api/admin/verifications/:verificationId/review', adminAuth, (req, res
         status: action === 'approve' ? '已通过' : '已驳回',
         reviewedAt: formatTimestamp(),
         summary: action === 'approve'
-          ? '实名认证审核通过。'
-          : `实名认证审核未通过：${String(reason || '请重新提交资料。').trim()}`,
+          ? 'Your identity verification was approved.'
+          : `Identity verification rejected: ${String(reason || 'Please submit your documents again.').trim()}`,
       }
       return { ...u, verification: updatedVerification }
     }),

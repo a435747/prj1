@@ -11,6 +11,26 @@ const BASE_WITHDRAWABLE = 860
 const BASE_TODAY_EARNINGS = 286
 const BASE_ONLINE_COUNT = '18,426'
 
+function isCompletedStatus(status) {
+  return status === '已完成' || status === 'completed'
+}
+
+function isApprovedStatus(status) {
+  return status === '已通过' || status === 'approved'
+}
+
+function isRejectedStatus(status) {
+  return status === '已驳回' || status === 'rejected'
+}
+
+function isUnderReviewStatus(status) {
+  return status === '待审核' || status === 'under_review'
+}
+
+function isPendingProofStatus(status) {
+  return status === '待提交' || status === 'pending_proof'
+}
+
 const claimedTasks = [
   {
     id: 'claim-1001',
@@ -18,7 +38,7 @@ const claimedTasks = [
     username: 'Aurora',
     title: 'High-Commission Store Video',
     amount: '$168',
-    status: '已完成',
+    status: 'completed',
     createdAt: 'Today 09:20',
     submittedAt: 'Today 10:05',
     reviewedAt: 'Today 10:30',
@@ -32,7 +52,7 @@ const claimedTasks = [
     username: 'Aurora',
     title: 'Livestream Engagement Task',
     amount: '$22',
-    status: '待提交',
+    status: 'pending_proof',
     createdAt: 'Today 11:45',
     submittedAt: '',
     reviewedAt: '',
@@ -47,7 +67,7 @@ const withdrawRequests = [
     id: 'withdraw-1001',
     username: 'Aurora',
     amount: '$120',
-    status: '已通过',
+    status: 'approved',
     createdAt: 'Today 08:10',
     reviewedAt: 'Today 08:25',
     accountType: 'USDT',
@@ -58,7 +78,7 @@ const withdrawRequests = [
     id: 'withdraw-1002',
     username: 'Aurora',
     amount: '$88',
-    status: '待审核',
+    status: 'under_review',
     createdAt: 'Today 12:10',
     reviewedAt: '',
     accountType: 'Alipay',
@@ -73,19 +93,19 @@ function parseDollar(value) {
 
 function getApprovedTaskIncome(taskClaims) {
   return taskClaims
-    .filter((item) => item.status === '已完成')
+    .filter((item) => isCompletedStatus(item.status))
     .reduce((sum, item) => sum + parseDollar(item.amount), 0)
 }
 
 function getApprovedWithdrawAmount(requests) {
   return requests
-    .filter((item) => item.status === '已通过')
+    .filter((item) => isApprovedStatus(item.status))
     .reduce((sum, item) => sum + parseDollar(item.amount), 0)
 }
 
 function getPendingWithdrawAmount(requests) {
   return requests
-    .filter((item) => item.status === '待审核')
+    .filter((item) => isUnderReviewStatus(item.status))
     .reduce((sum, item) => sum + parseDollar(item.amount), 0)
 }
 
@@ -100,7 +120,7 @@ function buildHomeStats(taskClaims, withdraws, existingHomeStats = []) {
 }
 
 function buildQuickStats(taskClaims, withdraws) {
-  const completed = taskClaims.filter((item) => item.status === '已完成').length
+  const completed = taskClaims.filter((item) => isCompletedStatus(item.status)).length
   const approvedIncome = getApprovedTaskIncome(taskClaims)
   const approvedWithdrawAmount = getApprovedWithdrawAmount(withdraws)
   const pendingWithdrawAmount = getPendingWithdrawAmount(withdraws)
@@ -115,7 +135,7 @@ function buildQuickStats(taskClaims, withdraws) {
 }
 
 function buildProfile(taskClaims, withdraws) {
-  const completed = taskClaims.filter((item) => item.status === '已完成').length
+  const completed = taskClaims.filter((item) => isCompletedStatus(item.status)).length
   const approvedIncome = getApprovedTaskIncome(taskClaims)
   const approvedWithdrawAmount = getApprovedWithdrawAmount(withdraws)
   const pendingWithdrawAmount = getPendingWithdrawAmount(withdraws)

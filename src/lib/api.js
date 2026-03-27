@@ -39,10 +39,10 @@ export const api = {
 
   savePlatform: (token, body) => request('/platform', { method: 'PUT', body, token }),
   getAdminData: (token) => request('/admin/data', { token }),
-  reviewTaskClaim: (token, claimId, action) =>
-    request(`/admin/task-claims/${claimId}/review`, { method: 'POST', body: { action }, token }),
-  reviewWithdrawRequest: (token, requestId, action) =>
-    request(`/admin/withdraw-requests/${requestId}/review`, { method: 'POST', body: { action }, token }),
+  reviewTaskClaim: (token, claimId, action, reason = '') =>
+    request(`/admin/task-claims/${claimId}/review`, { method: 'POST', body: { action, reason }, token }),
+  reviewWithdrawRequest: (token, requestId, action, reason = '') =>
+    request(`/admin/withdraw-requests/${requestId}/review`, { method: 'POST', body: { action, reason }, token }),
   reviewVerification: (token, verificationId, action, reason = '') =>
     request(`/admin/verifications/${verificationId}/review`, { method: 'POST', body: { action, reason }, token }),
 }

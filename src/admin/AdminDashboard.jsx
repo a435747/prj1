@@ -16,37 +16,64 @@ import { UserTable } from './components/UserTable'
 import { VerificationTable } from './components/VerificationTable'
 import { VIPTable } from './components/VIPTable'
 import { WithdrawTable } from './components/WithdrawTable'
-import { searchFields, sidebarMenus } from './data/adminMock'
+import { sidebarMenus } from './data/adminMock'
 
 const pageTitles = {
-  frontendContent: '前台内容',
-  frontendTasks: '任务配置',
-  taskClaims: '任务审核',
+  frontendContent: '前台内容运营',
+  frontendTasks: '任务配置中心',
+  taskClaims: '任务审核中心',
   verifications: '实名认证审核',
-  withdraw: '提现管理',
-  recharge: '充值管理',
+  withdraw: '提现审核中心',
+  recharge: '充值记录管理',
   orders: '订单列表',
-  vip: 'VIP 等级',
-  rules: '打针规则',
+  vip: 'VIP 等级配置',
+  rules: '规则策略配置',
   users: '用户管理',
+}
+
+const pageDescriptions = {
+  frontendContent: '维护前台首页关键数据、公告和任务展示内容，修改将直接同步到前台。',
+  frontendTasks: '统一维护任务标题、地区、价格与标签，用于前台任务大厅展示。',
+  taskClaims: '集中审核用户提交的任务凭证，优先处理待审核记录。',
+  verifications: '核验用户实名资料、身份证号与收款账户信息。',
+  withdraw: '审核提现申请并确认收款账号，适用于财务与风控联动处理。',
+  recharge: '查看充值记录与状态分布，追踪入金渠道表现。',
+  orders: '查看任务订单、佣金、付款状态和订单时间线。',
+  vip: '管理 VIP 等级门槛、佣金比例与提现权限。',
+  rules: '配置平台策略规则，控制业务分发和收益逻辑。',
+  users: '查看平台用户基础信息、状态和注册活跃情况。',
+}
+
+const initialFilters = {
+  keyword: '',
+  status: '全部',
+  channel: '',
+  startDate: '',
+  endDate: '',
 }
 
 function filterRows(rows, filters) {
   return rows.filter((row) => {
-    const keywordChecks = [
-      filters.username,
-      filters.phone,
-      filters.bindUserId,
-      filters.orderNo,
-      filters.inviteCode,
-    ].filter(Boolean)
-
     const text = Object.values(row).join(' ')
-    const keywordPass = !keywordChecks.length || keywordChecks.every((keyword) => text.includes(keyword))
-    if (!keywordPass) return false
 
-    if (filters.status && filters.status !== '全部') {
-      return text.includes(filters.status)
+    if (filters.keyword && !text.toLowerCase().includes(filters.keyword.toLowerCase())) {
+      return false
+    }
+
+    if (filters.status && filters.status !== '全部' && !text.includes(filters.status)) {
+      return false
+    }
+
+    if (filters.channel && !text.toLowerCase().includes(filters.channel.toLowerCase())) {
+      return false
+    }
+
+    if (filters.startDate && !text.includes(filters.startDate)) {
+      return false
+    }
+
+    if (filters.endDate && !text.includes(filters.endDate)) {
+      return false
     }
 
     return true
@@ -63,14 +90,37 @@ function buildDynamicStats(dataset) {
   }, 0)
 
   return {
-    title: '当前列表统计',
+    title: '当前页面统计',
     items: [
-      { label: '当前列表总额', value: `¥ ${totalAmount.toLocaleString()}` },
-      { label: '当前列表人数', value: `${dataset.length}` },
+      { label: '记录总数', value: `${dataset.length}` },
+      { label: '累计数值', value: `¥ ${totalAmount.toLocaleString()}` },
       { label: '今日新增', value: `${Math.max(0, Math.floor(dataset.length / 5))}` },
       { label: '昨日新增', value: `${Math.max(0, Math.floor(dataset.length / 6))}` },
     ],
   }
+}
+
+function buildWorkQueue(taskClaims, verifications, withdraws) {
+  return [
+    {
+      key: 'taskClaims',
+      title: '待处理任务审核',
+      count: taskClaims.filter((item) => item.status === '待审核').length,
+      note: '优先核验已提交任务凭证的记录。',
+    },
+    {
+      key: 'verifications',
+      title: '待处理实名认证',
+      count: verifications.filter((item) => item.status === '待审核').length,
+      note: '请核验实名、证件号与账户姓名一致性。',
+    },
+    {
+      key: 'withdraw',
+      title: '待处理提现申请',
+      count: withdraws.filter((item) => item.status === '待审核').length,
+      note: '建议财务优先核对收款方式与账号。',
+    },
+  ]
 }
 
 function downloadRows(filename, rows) {
@@ -100,8 +150,8 @@ export function AdminDashboard({
   const [collapsed, setCollapsed] = useState(false)
   const [activeKey, setActiveKey] = useState('frontendContent')
   const [selectedTaskId, setSelectedTaskId] = useState(platformData.tasks[0]?.id)
-  const [filters, setFilters] = useState(searchFields)
-  const [appliedFilters, setAppliedFilters] = useState(searchFields)
+  const [filters, setFilters] = useState(initialFilters)
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters)
   const [pages, setPages] = useState({
     frontendTasks: 1,
     taskClaims: 1,
@@ -143,10 +193,15 @@ export function AdminDashboard({
     [appliedFilters, orders, platformData.tasks, recharges, rules, taskClaims, verifications, users, vipLevels, withdraws],
   )
 
+  const workQueue = useMemo(() => buildWorkQueue(taskClaims, verifications, withdraws), [taskClaims, verifications, withdraws])
   const currentRows = datasets[activeKey] ?? platformData.tasks
   const dynamicStats = buildDynamicStats(Array.isArray(currentRows) ? currentRows : [])
+  const pageTitle = pageTitles[activeKey]
+  const pageDescription = pageDescriptions[activeKey]
 
   const setPage = (key, page) => setPages((prev) => ({ ...prev, [key]: page }))
+
+  const resetPages = () => setPages({ frontendTasks: 1, taskClaims: 1, users: 1, verifications: 1, vip: 1, rules: 1, orders: 1, recharge: 1, withdraw: 1 })
 
   const savePlatform = async (updater) => {
     const nextPlatform = typeof updater === 'function' ? updater(platformData) : updater
@@ -161,7 +216,7 @@ export function AdminDashboard({
   const reviewClaim = async (claim, action) => {
     setProcessingClaimId(claim.id)
     try {
-      await onReviewTaskClaim(claim.id, action)
+      await onReviewTaskClaim(claim.id, action, claim.rejectReason || '')
     } finally {
       setProcessingClaimId(null)
     }
@@ -170,7 +225,7 @@ export function AdminDashboard({
   const reviewWithdraw = async (row, action) => {
     setProcessingWithdrawId(row.id)
     try {
-      await onReviewWithdraw(row.id, action)
+      await onReviewWithdraw(row.id, action, row.rejectReason || '')
     } finally {
       setProcessingWithdrawId(null)
     }
@@ -263,52 +318,91 @@ export function AdminDashboard({
           menus={sidebarMenus}
         />
       }
-      navbar={<Navbar title="系统管理后台" adminUsername={adminUsername} onRefresh={() => setAppliedFilters({ ...appliedFilters })} />}
+      navbar={
+        <Navbar
+          title={pageTitle}
+          subtitle={pageDescription}
+          adminUsername={adminUsername}
+          onRefresh={() => setAppliedFilters({ ...appliedFilters })}
+        />
+      }
     >
-      <div className="space-y-4">
-        <div className="flex justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-800">{pageTitles[activeKey]}</h2>
-            <p className="text-sm text-slate-500">这里的修改会实时保存到服务端。{saving ? ' 保存中...' : ''}</p>
+      <div className="space-y-5">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Management Overview</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">{pageTitle}</h2>
+              <p className="mt-2 text-sm text-slate-500">{pageDescription} {saving ? '当前有配置正在保存到服务端。' : '当前页面数据已与服务端保持同步。'}</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={onLogout}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              >
+                退出登录
+              </button>
+              <button
+                type="button"
+                onClick={onSwitchToFrontend}
+                className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 active:scale-95"
+              >
+                返回前台
+              </button>
+            </div>
           </div>
-          <div className="flex gap-3">
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          {workQueue.map((item) => (
             <button
+              key={item.key}
               type="button"
-              onClick={onLogout}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              onClick={() => setActiveKey(item.key)}
+              className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_40px_rgba(59,130,246,0.12)]"
             >
-              退出登录
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">待办工作台</p>
+              <div className="mt-3 flex items-end justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
+                  <p className="mt-2 text-sm text-slate-500">{item.note}</p>
+                </div>
+                <div className={`rounded-2xl px-4 py-3 text-2xl font-semibold ${item.count > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                  {item.count}
+                </div>
+              </div>
             </button>
-            <button
-              type="button"
-              onClick={onSwitchToFrontend}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 active:scale-95"
-            >
-              返回前台
-            </button>
-          </div>
+          ))}
+        </section>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {statsGroups.map((group, index) => (
+            <StatsCard key={group.title} title={group.title} items={group.items} tone={index === 0 ? 'dark' : index === 1 ? 'blue' : 'default'} />
+          ))}
+          <StatsCard title={dynamicStats.title} items={dynamicStats.items} />
         </div>
+
+        <SearchForm
+          activeKey={activeKey}
+          values={filters}
+          onChange={setFilters}
+          resultCount={Array.isArray(currentRows) ? currentRows.length : 0}
+          onSearch={() => {
+            setAppliedFilters(filters)
+            resetPages()
+          }}
+          onReset={() => {
+            setFilters(initialFilters)
+            setAppliedFilters(initialFilters)
+            resetPages()
+          }}
+          onExport={() => downloadRows(`${pageTitle}.csv`, Array.isArray(currentRows) ? currentRows : [])}
+        />
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <AccountPanel username={adminUsername} onSubmit={onChangeAccount} />
           <PasswordPanel onSubmit={onChangePassword} />
-        </div>
-
-        <SearchForm
-          values={filters}
-          onChange={setFilters}
-          onSearch={() => {
-            setAppliedFilters(filters)
-            setPages({ frontendTasks: 1, taskClaims: 1, users: 1, verifications: 1, vip: 1, rules: 1, orders: 1, recharge: 1, withdraw: 1 })
-          }}
-          onExport={() => downloadRows(`${pageTitles[activeKey]}.csv`, Array.isArray(currentRows) ? currentRows : [])}
-        />
-
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {statsGroups.map((group) => (
-            <StatsCard key={group.title} title={group.title} items={group.items} />
-          ))}
-          <StatsCard title={dynamicStats.title} items={dynamicStats.items} />
         </div>
 
         {renderCurrentSection()}
