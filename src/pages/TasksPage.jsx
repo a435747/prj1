@@ -1,80 +1,101 @@
-import { useMemo, useState } from 'react'
-import { SectionTitle } from '../components/SectionTitle'
+import { useState } from 'react'
 import { TaskDetailCard } from '../components/TaskDetailCard'
-import { taskFilters as fallbackFilters, tasks as fallbackTasks } from '../data/mock'
+import { tasks as fallbackTasks } from '../data/mock'
 
 function parseDollar(val) {
   return Number(String(val ?? 0).replace(/[^\d.]/g, '')) || 0
 }
 
-export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile, submittingTaskId }) {
-  const [activeFilter, setActiveFilter] = useState('All')
-  const taskFilters = platformData?.taskFilters ?? fallbackFilters
-  const tasks = platformData?.tasks ?? fallbackTasks
-  const claimMap = new Map((platformData?.claimedTasks ?? []).map((item) => [item.taskId, item]))
+function claimStatusBadge(status) {
+  if (status === '已完成' || status === 'completed') return { label: 'Completed', cls: 'bg-emerald-500' }
+  if (status === '已驳回' || status === 'rejected') return { label: 'Rejected', cls: 'bg-red-500' }
+  if (status === '待审核' || status === 'under_review') return { label: 'Reviewing', cls: 'bg-blue-500' }
+  return { label: 'Pending', cls: 'bg-amber-500' }
+}
 
-  // Rule-based lock
+export function TasksPage({ platformData, onStartTask, onOpenProfile, submittingTaskId }) {
+  const [selectedTask, setSelectedTask] = useState(null)
+
+  const tasks = platformData?.tasks ?? fallbackTasks
+  const claimedTasks = platformData?.claimedTasks ?? []
+  const claimMap = new Map(claimedTasks.map((item) => [item.taskId, item]))
+
   const activeRule = platformData?.activeRule ?? null
   const vipLevel = platformData?.vipLevel ?? 'VIP1'
   const minAmount = activeRule ? parseDollar(activeRule.minAmount) : 0
+  const taskGroupCount = Number(activeRule?.taskGroupCount ?? 0)
 
   const isTaskLocked = (task) => {
     if (!activeRule || minAmount <= 0) return false
     return task.price < minAmount
   }
 
-  const visibleTasks = useMemo(() => {
-    if (activeFilter === 'All') return tasks
-    if (activeFilter === 'High Pay') return tasks.filter((task) => task.price >= 100)
-    if (activeFilter === 'Easy') return tasks.filter((task) => task.type === 'Easy' || task.price <= 30)
-    if (activeFilter === 'Nearby') return tasks.filter((task) => task.type === 'Nearby')
-    return tasks
-  }, [activeFilter, tasks])
+  const completedCount = claimedTasks.filter(
+    (c) => c.status === '已完成' || c.status === 'completed',
+  ).length
+  const groupProgress = taskGroupCount > 0 ? completedCount % taskGroupCount : null
+  const groupTotal = taskGroupCount > 0 ? taskGroupCount : null
 
-  const featuredTask = visibleTasks[0] ?? tasks[0]
-  const featuredClaim = featuredTask ? claimMap.get(featuredTask.id) : null
+  const getNextTask = (justClaimedId) => {
+    const currentIndex = tasks.findIndex((t) => t.id === justClaimedId)
+    for (let i = 1; i <= tasks.length; i++) {
+      const next = tasks[(currentIndex + i) % tasks.length]
+      if (next.id === justClaimedId) continue
+      if (isTaskLocked(next)) continue
+      const claim = claimMap.get(next.id)
+      if (!claim || claim.status === '已驳回' || claim.status === 'rejected') return next
+    }
+    return null
+  }
+
+  const selectedClaim = selectedTask ? claimMap.get(selectedTask.id) : null
+
+  const handleStartTask = async (task) => {
+    await onStartTask?.(task)
+    const next = getNextTask(task.id)
+    setSelectedTask(next ?? null)
+  }
 
   return (
-    <div className="space-y-5">
-      {activeRule && minAmount > 0 && (
+    <div className="space-y-4">
+      {/* Rule info + group progress */}
+      {activeRule && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-xs font-semibold text-amber-700">{vipLevel} Rule Active</p>
-          <p className="mt-1 text-xs text-amber-600">
-            Your current level requires tasks with a minimum reward of <span className="font-bold">${minAmount}</span>. Tasks below this threshold are locked.
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-amber-700">{vipLevel} · {activeRule.name}</p>
+              {minAmount > 0 && (
+                <p className="mt-0.5 text-xs text-amber-600">Min task reward: <span className="font-bold">${minAmount}</span></p>
+              )}
+            </div>
+            {groupTotal > 0 && (
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-amber-500">Group Progress</p>
+                <p className="text-lg font-bold text-amber-700">{groupProgress} / {groupTotal}</p>
+              </div>
+            )}
+          </div>
+          {groupTotal > 0 && (
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-amber-200">
+              <div
+                className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                style={{ width: `${Math.min(100, (groupProgress / groupTotal) * 100)}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
 
+      {/* Task grid */}
       <section>
-        <div className="hide-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          {taskFilters.map((filter) => {
-            const active = filter === activeFilter
-            return (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition active:scale-95 ${
-                  active
-                    ? 'bg-black text-[#f3c969] shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
-                    : 'bg-white text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)]'
-                }`}
-              >
-                {filter}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      <section>
-        <SectionTitle eyebrow="Task Hall" title="Hot Picks" />
+        <p className="mb-3 text-xs uppercase tracking-[0.28em] text-slate-400">Task Hall</p>
         <div className="grid grid-cols-2 gap-3">
-          {visibleTasks.map((task) => {
+          {tasks.map((task) => {
             const claim = claimMap.get(task.id)
             const submitting = submittingTaskId === task.id
             const locked = isTaskLocked(task)
-            const disabled = locked || Boolean(claim && claim.status !== '已驳回' && claim.status !== 'rejected') || submitting
+            const alreadyClaimed = Boolean(claim && claim.status !== '已驳回' && claim.status !== 'rejected')
+            const badge = claim ? claimStatusBadge(claim.status) : null
 
             return (
               <article
@@ -83,7 +104,7 @@ export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile
                   locked ? 'opacity-60' : 'hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_18px_35px_rgba(15,23,42,0.14)]'
                 }`}
               >
-                <button type="button" onClick={() => !locked && onOpenTask?.(task)} className="block w-full text-left">
+                <button type="button" onClick={() => !locked && setSelectedTask(task)} className="block w-full text-left">
                   <div className="relative overflow-hidden rounded-[22px]">
                     <img src={task.image} alt={task.title} className="h-28 w-full object-cover" />
                     {locked ? (
@@ -93,68 +114,32 @@ export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile
                       </div>
                     ) : (
                       <>
-                        <span className="absolute left-2 top-2 rounded-full bg-[#f3c969] px-2 py-1 text-[10px] font-bold text-black">
-                          {task.badge}
-                        </span>
-                        {claim ? (
-                          <span
-                            className={`absolute right-2 top-2 rounded-full px-2 py-1 text-[10px] font-bold text-white ${
-                              claim.status === '已完成' || claim.status === 'completed'
-                                ? 'bg-emerald-500'
-                                : claim.status === '已驳回' || claim.status === 'rejected'
-                                  ? 'bg-red-500'
-                                  : claim.status === '待审核' || claim.status === 'under_review'
-                                    ? 'bg-blue-500'
-                                    : 'bg-amber-500'
-                            }`}
-                          >
-                            {claim.status === '已完成' || claim.status === 'completed'
-                              ? 'Completed'
-                              : claim.status === '已驳回' || claim.status === 'rejected'
-                                ? 'Rejected'
-                                : claim.status === '待审核' || claim.status === 'under_review'
-                                  ? 'Reviewing'
-                                  : 'Pending Proof'}
-                          </span>
-                        ) : null}
+                        <span className="absolute left-2 top-2 rounded-full bg-[#f3c969] px-2 py-1 text-[10px] font-bold text-black">{task.badge}</span>
+                        {badge && <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-[10px] font-bold text-white ${badge.cls}`}>{badge.label}</span>}
                       </>
                     )}
                   </div>
-
                   <div className="px-1 pb-1 pt-3">
                     <h3 className="line-clamp-1 text-sm font-semibold text-slate-900">{task.title}</h3>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-base font-bold text-amber-600">${task.price}</span>
-                      <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-500">
-                        {task.location}
-                      </span>
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-500">{task.location}</span>
                     </div>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  disabled={disabled}
-                  onClick={() => !locked && onStartTask?.(task)}
+                  disabled={locked || submitting}
+                  onClick={() => !locked && setSelectedTask(task)}
                   className={`mt-2 w-full rounded-2xl px-3 py-2 text-xs font-semibold transition duration-200 active:scale-[0.97] disabled:cursor-not-allowed ${
-                    locked
-                      ? 'bg-slate-200 text-slate-400'
-                      : 'bg-black text-white hover:bg-slate-800 disabled:bg-slate-300'
+                    locked ? 'bg-slate-200 text-slate-400' : 'bg-black text-white hover:bg-slate-800 disabled:bg-slate-300'
                   }`}
                 >
-                  {locked
-                    ? `Requires Min $${minAmount}`
-                    : claim?.status === '已完成' || claim?.status === 'completed'
-                      ? 'Completed'
-                      : claim?.status === '待审核' || claim?.status === 'under_review'
-                        ? 'Awaiting Review'
-                        : claim?.status === '待提交' || claim?.status === 'pending_proof'
-                          ? 'Submit Proof In Profile'
-                          : claim?.status === '已驳回' || claim?.status === 'rejected'
-                            ? 'Claim Again'
-                            : submitting
-                              ? 'Submitting...'
-                              : 'Grab Order'}
+                  {locked ? `Requires Min $${minAmount}`
+                    : alreadyClaimed && claim.status !== '已驳回' && claim.status !== 'rejected' ? 'View Detail'
+                    : submitting ? 'Submitting...'
+                    : 'Grab Order'}
                 </button>
               </article>
             )
@@ -162,16 +147,25 @@ export function TasksPage({ platformData, onOpenTask, onStartTask, onOpenProfile
         </div>
       </section>
 
-      <section>
-        <SectionTitle eyebrow="Detail" title="Task Detail" />
-        <TaskDetailCard
-          task={featuredTask}
-          claim={featuredClaim}
-          submitting={featuredTask ? submittingTaskId === featuredTask.id : false}
-          onStart={onStartTask}
-          onOpenProfile={onOpenProfile}
-        />
-      </section>
+      {/* Task Detail Sheet */}
+      {selectedTask && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedTask(null)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-full max-w-md rounded-t-[32px] bg-[#f6f7f8] p-4 pb-10 shadow-[0_-20px_60px_rgba(15,23,42,0.18)] animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-300" />
+            <TaskDetailCard
+              task={selectedTask}
+              claim={selectedClaim}
+              submitting={submittingTaskId === selectedTask.id}
+              onStart={handleStartTask}
+              onOpenProfile={() => { onOpenProfile?.(); setSelectedTask(null) }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

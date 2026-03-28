@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import path from 'node:path'
@@ -91,10 +91,10 @@ function appendOrderFromClaim(adminData, claim) {
       {
         orderNo: `TASK${String(Date.now()).slice(-10)}`,
         username: claim.username,
-        balance: '¥0',
-        frozen: '¥0',
-        amount: `¥${Number(claim.amount.replace('$', ''))}`,
-        commission: `¥${Number(claim.amount.replace('$', ''))}`,
+        balance: '楼0',
+        frozen: '楼0',
+        amount: `楼${Number(claim.amount.replace('$', ''))}`,
+        commission: `楼${Number(claim.amount.replace('$', ''))}`,
         level: 'VIP1',
         orderTime: claim.createdAt,
         finalPayTime: '--',
@@ -110,16 +110,16 @@ function updateOrderStatus(adminData, claim, status) {
   return {
     ...adminData,
     orders: (adminData.orders ?? []).map((order) => {
-      if (order.username !== claim.username || order.amount !== `¥${Number(claim.amount.replace('$', ''))}`) {
+      if (order.username !== claim.username || order.amount !== `楼${Number(claim.amount.replace('$', ''))}`) {
         return order
       }
 
       return {
         ...order,
         status,
-        paid: status === '已完成' ? '是' : '否',
-        finalPayTime: ['under_review', 'completed', 'rejected', '待审核', '已完成', '已驳回'].includes(status) ? formatTimestamp() : order.finalPayTime,
-        paid: status === 'completed' || status === '已完成' ? 'Yes' : 'No',
+        paid: status === '宸插畬鎴? ? '鏄? : '鍚?,
+        finalPayTime: ['under_review', 'completed', 'rejected', '寰呭鏍?, '宸插畬鎴?, '宸查┏鍥?].includes(status) ? formatTimestamp() : order.finalPayTime,
+        paid: status === 'completed' || status === '宸插畬鎴? ? 'Yes' : 'No',
       }
     }),
   }
@@ -205,7 +205,7 @@ app.post('/api/auth/login', (req, res) => {
   const db = readDb()
 
   if (username !== db.adminUser.username || password !== db.adminUser.password) {
-    return res.status(401).json({ message: '账号或密码错误' })
+    return res.status(401).json({ message: '璐﹀彿鎴栧瘑鐮侀敊璇? })
   }
 
   return res.json({
@@ -240,7 +240,7 @@ app.post('/api/frontend-auth/register', (req, res) => {
       id: `user-${Date.now()}`,
       username: String(username).trim(),
       password: String(password),
-      token: `token-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      token: `token-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, ruleId: (current.adminData?.rules ?? []).find((r) => r.isDefault)?.id ?? null,
       platformData: derivePlatformData({
         ...current.platformData,
         claimedTasks: [],
@@ -326,7 +326,7 @@ app.post('/api/frontend-auth/verification', frontendAuth, (req, res) => {
       realName: String(realName).trim(),
       idCard: String(idCard).trim(),
       accountName: String(accountName).trim(),
-      status: '待审核',
+      status: '寰呭鏍?,
       createdAt: formatTimestamp(),
       reviewedAt: '',
       summary: 'Verification submitted successfully. Waiting for admin review.',
@@ -350,15 +350,15 @@ app.post('/api/auth/change-password', adminAuth, (req, res) => {
   const db = readDb()
 
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: '请填写完整密码信息' })
+    return res.status(400).json({ message: '璇峰～鍐欏畬鏁村瘑鐮佷俊鎭? })
   }
 
   if (currentPassword !== db.adminUser.password) {
-    return res.status(400).json({ message: '当前密码错误' })
+    return res.status(400).json({ message: '褰撳墠瀵嗙爜閿欒' })
   }
 
   if (String(newPassword).length < 6) {
-    return res.status(400).json({ message: '新密码至少 6 位' })
+    return res.status(400).json({ message: '鏂板瘑鐮佽嚦灏?6 浣? })
   }
 
   updateDb((current) => ({
@@ -377,19 +377,19 @@ app.post('/api/auth/change-account', adminAuth, (req, res) => {
   const db = readDb()
 
   if (!currentPassword || !newUsername) {
-    return res.status(400).json({ message: '请填写完整账户信息' })
+    return res.status(400).json({ message: '璇峰～鍐欏畬鏁磋处鎴蜂俊鎭? })
   }
 
   if (currentPassword !== db.adminUser.password) {
-    return res.status(400).json({ message: '当前密码错误' })
+    return res.status(400).json({ message: '褰撳墠瀵嗙爜閿欒' })
   }
 
   if (String(newUsername).trim().length < 3) {
-    return res.status(400).json({ message: '新账号至少 3 位' })
+    return res.status(400).json({ message: '鏂拌处鍙疯嚦灏?3 浣? })
   }
 
   if (newPassword && String(newPassword).length < 6) {
-    return res.status(400).json({ message: '新密码至少 6 位' })
+    return res.status(400).json({ message: '鏂板瘑鐮佽嚦灏?6 浣? })
   }
 
   const nextDb = updateDb((current) => ({
@@ -402,7 +402,7 @@ app.post('/api/auth/change-account', adminAuth, (req, res) => {
   }))
 
   return res.json({
-    message: '管理员账户更新成功',
+    message: '绠＄悊鍛樿处鎴锋洿鏂版垚鍔?,
     user: { username: nextDb.adminUser.username },
   })
 })
@@ -422,15 +422,13 @@ app.get('/api/platform', (req, res) => {
   }
 
   const completedCount = (user.platformData.claimedTasks ?? []).filter(
-    (c) => c.status === 'completed' || c.status === '已完成',
+    (c) => c.status === 'completed' || c.status === '宸插畬鎴?,
   ).length
   const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
-  const activeRule = rules.find((r) => {
-    const name = String(r.name || '').toLowerCase()
-    if (vipLevel === 'VIP3' && name.includes('vip3')) return true
-    if (vipLevel === 'VIP2' && (name.includes('vip2') || name.includes('高佣'))) return true
-    return true
-  }) ?? rules[0]
+  let activeRule = user.ruleId ? rules.find((r) => r.id === user.ruleId) : null
+  if (!activeRule) {
+    activeRule = rules.find((r) => r.isDefault) ?? rules[0]
+  }
 
   return res.json({
     ...derivePlatformData(user.platformData),
@@ -450,25 +448,23 @@ app.post('/api/platform/claim-task', frontendAuth, (req, res) => {
   }
 
   const exists = (req.frontendUser.platformData.claimedTasks ?? []).some(
-    (item) => item.taskId === taskId && item.status !== '已驳回',
+    (item) => item.taskId === taskId && item.status !== '宸查┏鍥?,
   )
 
   if (exists) {
     return res.status(400).json({ message: 'This task has already been claimed.' })
   }
 
-  // ── Rule check ──────────────────────────────────────────────────────
+  // 鈹€鈹€ Rule check 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   const completedCount = (req.frontendUser.platformData.claimedTasks ?? []).filter(
-    (c) => c.status === 'completed' || c.status === '已完成',
+    (c) => c.status === 'completed' || c.status === '宸插畬鎴?,
   ).length
   const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
   const rules = db.adminData?.rules ?? []
-  const activeRule = rules.find((r) => {
-    const name = String(r.name || '').toLowerCase()
-    if (vipLevel === 'VIP3' && name.includes('vip3')) return true
-    if (vipLevel === 'VIP2' && (name.includes('vip2') || name.includes('高佣'))) return true
-    return true // fallback: apply first rule
-  }) ?? rules[0]
+  let activeRule = user.ruleId ? rules.find((r) => r.id === user.ruleId) : null
+  if (!activeRule) {
+    activeRule = rules.find((r) => r.isDefault) ?? rules[0]
+  }
 
   if (activeRule) {
     const minAmount = parseDollar(activeRule.minAmount)
@@ -481,7 +477,7 @@ app.post('/api/platform/claim-task', frontendAuth, (req, res) => {
       })
     }
   }
-  // ────────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
   const claim = {
     id: `claim-${Date.now()}`,
@@ -489,7 +485,7 @@ app.post('/api/platform/claim-task', frontendAuth, (req, res) => {
     username: req.frontendUser.username,
     title: task.title,
     amount: formatAmount(task.price),
-    status: '待提交',
+    status: '寰呮彁浜?,
     createdAt: formatTimestamp(),
     submittedAt: '',
     reviewedAt: '',
@@ -554,11 +550,11 @@ app.post('/api/platform/task-claims/:claimId/submit', frontendAuth, (req, res) =
     const nextUsers = [...current.frontendUsers]
     const nextClaims = (nextUsers[userIndex].platformData.claimedTasks ?? []).map((claim) => {
       if (claim.id !== claimId) return claim
-      if (claim.status !== '待提交' && claim.status !== '已驳回') return claim
+      if (claim.status !== '寰呮彁浜? && claim.status !== '宸查┏鍥?) return claim
 
       updatedClaim = {
         ...claim,
-        status: '待审核',
+        status: '寰呭鏍?,
         submittedAt: formatTimestamp(),
         proofText: String(proofText).trim(),
         summary: 'Task proof submitted successfully. Waiting for admin review.',
@@ -594,7 +590,7 @@ app.post('/api/platform/task-claims/:claimId/submit', frontendAuth, (req, res) =
         ...current.platformData,
         claimedTasks: (current.platformData.claimedTasks ?? []).map((c) => c.id === claimId ? updatedClaim : c),
       }),
-      adminData: updateOrderStatus(current.adminData, updatedClaim, '待审核'),
+      adminData: updateOrderStatus(current.adminData, updatedClaim, '寰呭鏍?),
     }
   })
 
@@ -618,11 +614,11 @@ app.post('/api/platform/withdraw-requests', frontendAuth, (req, res) => {
     return res.status(400).json({ message: 'Please complete your withdrawal account information.' })
   }
 
-  // ── Task completion score check ──────────────────────────────────────
+  // 鈹€鈹€ Task completion score check 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   const db = readDb()
   const rules = db.adminData?.rules ?? []
   const completedClaims = (req.frontendUser.platformData.claimedTasks ?? []).filter(
-    (c) => c.status === 'completed' || c.status === '已完成',
+    (c) => c.status === 'completed' || c.status === '宸插畬鎴?,
   )
   const allTasks = db.platformData?.tasks ?? []
 
@@ -634,27 +630,25 @@ app.post('/api/platform/withdraw-requests', frontendAuth, (req, res) => {
   }, 0)
 
   const completedCount = (req.frontendUser.platformData.claimedTasks ?? []).filter(
-    (c) => c.status === 'completed' || c.status === '已完成',
+    (c) => c.status === 'completed' || c.status === '宸插畬鎴?,
   ).length
   const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
 
-  const activeRule = rules.find((r) => {
-    const name = String(r.name || '').toLowerCase()
-    if (vipLevel === 'VIP3' && name.includes('vip3')) return true
-    if (vipLevel === 'VIP2' && (name.includes('vip2') || name.includes('高佣'))) return true
-    return true
-  }) ?? rules[0]
+  let activeRule = user.ruleId ? rules.find((r) => r.id === user.ruleId) : null
+  if (!activeRule) {
+    activeRule = rules.find((r) => r.isDefault) ?? rules[0]
+  }
 
   const requiredScore = Number(activeRule?.requiredTaskCount ?? 0)
   if (requiredScore > 0 && completedScore < requiredScore) {
     return res.status(403).json({
-      message: `提现需完成 ${requiredScore} 积分的任务，当前已完成 ${completedScore.toFixed(1)} 积分，还差 ${(requiredScore - completedScore).toFixed(1)} 积分。请继续完成更多任务后再提现。`,
+      message: `鎻愮幇闇€瀹屾垚 ${requiredScore} 绉垎鐨勪换鍔★紝褰撳墠宸插畬鎴?${completedScore.toFixed(1)} 绉垎锛岃繕宸?${(requiredScore - completedScore).toFixed(1)} 绉垎銆傝缁х画瀹屾垚鏇村浠诲姟鍚庡啀鎻愮幇銆俙,
       locked: true,
       requiredScore,
       completedScore,
     })
   }
-  // ────────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
   let createdRequest = null
 
@@ -673,7 +667,7 @@ app.post('/api/platform/withdraw-requests', frontendAuth, (req, res) => {
       id: `withdraw-${Date.now()}`,
       username: req.frontendUser.username,
       amount: formatAmount(amountNum),
-      status: '待审核',
+      status: '寰呭鏍?,
       createdAt: formatTimestamp(),
       reviewedAt: '',
       accountType: String(accountType).trim(),
@@ -786,7 +780,7 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
 
     ;(current.frontendUsers ?? []).forEach((u, ui) => {
       ;(u.platformData.claimedTasks ?? []).forEach((c, ci) => {
-        if (c.id === claimId && c.status === '待审核') {
+        if (c.id === claimId && c.status === '寰呭鏍?) {
           targetUserIndex = ui
           targetClaimIndex = ci
         }
@@ -800,7 +794,7 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
 
     updatedClaim = {
       ...nextClaims[targetClaimIndex],
-      status: action === 'approve' ? '已完成' : '已驳回',
+      status: action === 'approve' ? '宸插畬鎴? : '宸查┏鍥?,
       reviewedAt: formatTimestamp(),
       summary:
         action === 'approve'
@@ -878,7 +872,7 @@ app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res)
 
     ;(current.frontendUsers ?? []).forEach((u, ui) => {
       ;(u.platformData.withdrawRequests ?? []).forEach((r, ri) => {
-        if (r.id === requestId && r.status === '待审核') {
+        if (r.id === requestId && r.status === '寰呭鏍?) {
           targetUserIndex = ui
           targetRequestIndex = ri
         }
@@ -892,7 +886,7 @@ app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res)
 
     updatedRequest = {
       ...nextRequests[targetRequestIndex],
-      status: action === 'approve' ? '已通过' : '已驳回',
+      status: action === 'approve' ? '宸查€氳繃' : '宸查┏鍥?,
       reviewedAt: formatTimestamp(),
       summary: action === 'approve'
         ? 'Your withdrawal request was approved and the payout has been arranged.'
@@ -966,10 +960,10 @@ app.post('/api/admin/verifications/:verificationId/review', adminAuth, (req, res
   const db = updateDb((current) => ({
     ...current,
     frontendUsers: (current.frontendUsers ?? []).map((u) => {
-      if (u.verification?.id !== verificationId || u.verification?.status !== '待审核') return u
+      if (u.verification?.id !== verificationId || u.verification?.status !== '寰呭鏍?) return u
       updatedVerification = {
         ...u.verification,
-        status: action === 'approve' ? '已通过' : '已驳回',
+        status: action === 'approve' ? '宸查€氳繃' : '宸查┏鍥?,
         reviewedAt: formatTimestamp(),
         summary: action === 'approve'
           ? 'Your identity verification was approved.'
@@ -994,7 +988,7 @@ app.post('/api/admin/verifications/:verificationId/review', adminAuth, (req, res
   })
 })
 
-// ── Recharge ──────────────────────────────────────────────────────────────
+// 鈹€鈹€ Recharge 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 app.post('/api/platform/recharge-requests', frontendAuth, (req, res) => {
   const { amount, txId, channel } = req.body
   const amountNum = Number(String(amount || 0).replace('$', ''))
@@ -1008,7 +1002,7 @@ app.post('/api/platform/recharge-requests', frontendAuth, (req, res) => {
   }
 
   const user = req.frontendUser
-  if (!user.verification || (user.verification.status !== 'approved' && user.verification.status !== '已通过')) {
+  if (!user.verification || (user.verification.status !== 'approved' && user.verification.status !== '宸查€氳繃')) {
     return res.status(403).json({ message: 'Real-name verification required before recharging.' })
   }
 
@@ -1155,7 +1149,7 @@ app.post('/api/admin/recharge-requests/:requestId/review', adminAuth, (req, res)
   })
 })
 
-// ── Rules ───────────────────────────────────────────────────────────────
+// 鈹€鈹€ Rules 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 app.post('/api/admin/rules', adminAuth, (req, res) => {
   const { rules } = req.body
   if (!Array.isArray(rules)) return res.status(400).json({ message: 'Invalid rules.' })
@@ -1168,7 +1162,7 @@ app.post('/api/admin/rules', adminAuth, (req, res) => {
   return res.json({ message: 'Rules updated.', rules: db.adminData.rules })
 })
 
-// ── User Management ──────────────────────────────────────────────────────
+// 鈹€鈹€ User Management 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 app.post('/api/admin/users/:userId/freeze', adminAuth, (req, res) => {
   const { userId } = req.params
   const { action } = req.body // 'freeze' | 'unfreeze'
@@ -1220,7 +1214,7 @@ app.post('/api/admin/users/:userId/edit', adminAuth, (req, res) => {
   return res.json({ message: 'User updated.', users })
 })
 
-// ── VIP Config ────────────────────────────────────────────────────────────
+// 鈹€鈹€ VIP Config 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 app.post('/api/admin/vip-levels', adminAuth, (req, res) => {
   const { vipLevels } = req.body
   if (!Array.isArray(vipLevels)) return res.status(400).json({ message: 'Invalid vipLevels.' })
@@ -1233,7 +1227,7 @@ app.post('/api/admin/vip-levels', adminAuth, (req, res) => {
   return res.json({ message: 'VIP levels updated.', vipLevels: db.adminData.vipLevels })
 })
 
-// ── Order Review ──────────────────────────────────────────────────────────
+// 鈹€鈹€ Order Review 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 app.post('/api/admin/orders/:orderNo/review', adminAuth, (req, res) => {
   const { orderNo } = req.params
   const { action } = req.body // 'approve' | 'reject'
@@ -1248,7 +1242,7 @@ app.post('/api/admin/orders/:orderNo/review', adminAuth, (req, res) => {
       ...current.adminData,
       orders: (current.adminData.orders ?? []).map((o) =>
         o.orderNo === orderNo
-          ? { ...o, status: action === 'approve' ? '已完成' : '已驳回', finalPayTime: formatTimestamp(), paid: action === 'approve' ? 'Yes' : 'No' }
+          ? { ...o, status: action === 'approve' ? '宸插畬鎴? : '宸查┏鍥?, finalPayTime: formatTimestamp(), paid: action === 'approve' ? 'Yes' : 'No' }
           : o
       ),
     },
@@ -1275,3 +1269,4 @@ if (NODE_ENV === 'production') {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} (${NODE_ENV})`)
 })
+

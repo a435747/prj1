@@ -104,8 +104,33 @@ function buildProfile(taskClaims, withdraws) {
   }
 }
 
+export const defaultBannerSlides = [
+  {
+    id: 1,
+    image: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80',
+    title: 'Earn While You Explore',
+    subtitle: 'Complete tasks and get paid daily',
+    link: '',
+  },
+  {
+    id: 2,
+    image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=800&q=80',
+    title: 'High Commission Tasks',
+    subtitle: 'Up to $200 per task — grab yours now',
+    link: '',
+  },
+  {
+    id: 3,
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+    title: 'Top Earners This Week',
+    subtitle: 'Join thousands of active members',
+    link: '',
+  },
+]
+
 export const initialPlatformData = {
-  supportLink: '',  // Set via admin backend
+  supportLink: '',
+  bannerSlides: defaultBannerSlides,
   homeStats: buildHomeStats(claimedTasks, withdrawRequests),
   tickerItems,
   featuredTasks: tasks.slice(0, 3).map((task) => ({

@@ -140,7 +140,9 @@ export function FrontendApp({
     }
 
     if (label === 'Recharge') {
-      setDetail({ title: 'Recharge Center', subtitle: 'Top up your balance', content: 'recharge' })
+      setActiveTab('earnings')
+      showNotice('Recharge center opened.')
+      return
       return
     }
 
@@ -281,7 +283,8 @@ export function FrontendApp({
             verification={frontendUser?.verification}
             withdrawSubmitting={withdrawSubmitting}
             onCreateWithdraw={handleCreateWithdraw}
-            onFeedClick={(item) => setDetail({ title: `${item.user} Earnings`, subtitle: 'Earnings detail', content: 'feed', item })}
+            onSubmitRecharge={handleCreateRecharge}
+            rechargeSubmitting={rechargeSubmitting}
           />
         )
       case 'leaderboard':
@@ -324,6 +327,7 @@ export function FrontendApp({
         <Header
           title={title}
           onVipClick={() => setDetail({ title: 'VIP Access', subtitle: 'Membership levels & benefits', content: 'vip' })}
+          supportLink={platformData?.supportLink}
         />
 
         <main className="px-4 pb-28 pt-24">
