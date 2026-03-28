@@ -7,9 +7,9 @@ function parseDollar(val) {
 }
 
 function claimStatusBadge(status) {
-  if (status === '已完成' || status === 'completed') return { label: 'Completed', cls: 'bg-emerald-500' }
-  if (status === '已驳回' || status === 'rejected') return { label: 'Rejected', cls: 'bg-red-500' }
-  if (status === '待审核' || status === 'under_review') return { label: 'Reviewing', cls: 'bg-blue-500' }
+  if (status === 'completed' || status === '\u5df2\u5b8c\u6210') return { label: 'Completed', cls: 'bg-emerald-500' }
+  if (status === 'rejected' || status === '\u5df2\u9a73\u56de') return { label: 'Rejected', cls: 'bg-red-500' }
+  if (status === 'under_review' || status === '\u5f85\u5ba1\u6838') return { label: 'Reviewing', cls: 'bg-blue-500' }
   return { label: 'Pending', cls: 'bg-amber-500' }
 }
 
@@ -21,20 +21,12 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
   const claimMap = new Map(claimedTasks.map((item) => [item.taskId, item]))
 
   const activeRule = platformData?.activeRule ?? null
-  const vipLevel = platformData?.vipLevel ?? 'VIP1'
   const minAmount = activeRule ? parseDollar(activeRule.minAmount) : 0
-  const taskGroupCount = Number(activeRule?.taskGroupCount ?? 0)
 
   const isTaskLocked = (task) => {
     if (!activeRule || minAmount <= 0) return false
     return task.price < minAmount
   }
-
-  const completedCount = claimedTasks.filter(
-    (c) => c.status === '已完成' || c.status === 'completed',
-  ).length
-  const groupProgress = taskGroupCount > 0 ? completedCount % taskGroupCount : null
-  const groupTotal = taskGroupCount > 0 ? taskGroupCount : null
 
   const getNextTask = (justClaimedId) => {
     const currentIndex = tasks.findIndex((t) => t.id === justClaimedId)
@@ -43,7 +35,7 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
       if (next.id === justClaimedId) continue
       if (isTaskLocked(next)) continue
       const claim = claimMap.get(next.id)
-      if (!claim || claim.status === '已驳回' || claim.status === 'rejected') return next
+      if (!claim || claim.status === 'rejected' || claim.status === '\u5df2\u9a73\u56de') return next
     }
     return null
   }
@@ -56,45 +48,49 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
     setSelectedTask(next ?? null)
   }
 
+  // Determine the current task the user should work on:
+  // 1. Any task with pending_proof or rejected status (needs action)
+  // 2. First unclaimed unlocked task
+  // 3. First under_review task (waiting)
+  // 4. Fallback to first task
+  const currentTask = (() => {
+    // Priority 1: task needing user action (pending or rejected)
+    const actionNeeded = claimedTasks.find(
+      (c) => c.status === '\u5f85\u63d0\u4ea4' || c.status === 'pending_proof' || c.status === '\u5df2\u9a73\u56de' || c.status === 'rejected'
+    )
+    if (actionNeeded) {
+      const t = tasks.find((t) => t.id === actionNeeded.taskId)
+      if (t) return t
+    }
+    // Priority 2: first unlocked unclaimed task
+    const unclaimed = tasks.find((t) => {
+      if (isTaskLocked(t)) return false
+      const c = claimMap.get(t.id)
+      return !c || c.status === '\u5df2\u9a73\u56de' || c.status === 'rejected'
+    })
+    if (unclaimed) return unclaimed
+    // Priority 3: under review task
+    const reviewing = claimedTasks.find((c) => c.status === '\u5f85\u5ba1\u6838' || c.status === 'under_review')
+    if (reviewing) {
+      const t = tasks.find((t) => t.id === reviewing.taskId)
+      if (t) return t
+    }
+    // Fallback
+    return tasks[0] ?? null
+  })()
+
+  const visibleTasks = currentTask ? [currentTask] : []
+
   return (
     <div className="space-y-4">
-      {/* Rule info + group progress */}
-      {activeRule && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold text-amber-700">{vipLevel} · {activeRule.name}</p>
-              {minAmount > 0 && (
-                <p className="mt-0.5 text-xs text-amber-600">Min task reward: <span className="font-bold">${minAmount}</span></p>
-              )}
-            </div>
-            {groupTotal > 0 && (
-              <div className="text-right">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-amber-500">Group Progress</p>
-                <p className="text-lg font-bold text-amber-700">{groupProgress} / {groupTotal}</p>
-              </div>
-            )}
-          </div>
-          {groupTotal > 0 && (
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-amber-200">
-              <div
-                className="h-full rounded-full bg-amber-500 transition-all duration-500"
-                style={{ width: `${Math.min(100, (groupProgress / groupTotal) * 100)}%` }}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Task grid */}
       <section>
         <p className="mb-3 text-xs uppercase tracking-[0.28em] text-slate-400">Task Hall</p>
         <div className="grid grid-cols-2 gap-3">
-          {tasks.map((task) => {
+          {visibleTasks.map((task) => {
             const claim = claimMap.get(task.id)
             const submitting = submittingTaskId === task.id
             const locked = isTaskLocked(task)
-            const alreadyClaimed = Boolean(claim && claim.status !== '已驳回' && claim.status !== 'rejected')
+            const alreadyClaimed = Boolean(claim && claim.status !== 'rejected' && claim.status !== '\u5df2\u9a73\u56de')
             const badge = claim ? claimStatusBadge(claim.status) : null
 
             return (
@@ -137,7 +133,7 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
                   }`}
                 >
                   {locked ? `Requires Min $${minAmount}`
-                    : alreadyClaimed && claim.status !== '已驳回' && claim.status !== 'rejected' ? 'View Detail'
+                    : alreadyClaimed ? 'View Detail'
                     : submitting ? 'Submitting...'
                     : 'Grab Order'}
                 </button>
@@ -147,7 +143,6 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
         </div>
       </section>
 
-      {/* Task Detail Sheet */}
       {selectedTask && (
         <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedTask(null)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
