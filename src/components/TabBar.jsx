@@ -26,6 +26,14 @@ function Icon({ type, active }) {
         <path d="M17 19v-7" />
       </>
     ),
+    support: (
+      <>
+        <path d="M6 9.5a6 6 0 0 1 12 0c0 4.5-4.2 6.2-6 6.2-.8 0-1.6-.2-2.3-.5L6 17l1.1-3A5.8 5.8 0 0 1 6 9.5Z" />
+        <path d="M9 9.5h.01" />
+        <path d="M12 9.5h.01" />
+        <path d="M15 9.5h.01" />
+      </>
+    ),
     user: (
       <>
         <circle cx="12" cy="8" r="3.5" />

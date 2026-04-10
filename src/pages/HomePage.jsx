@@ -98,6 +98,30 @@ export function HomePage({ platformData, onQuickAction }) {
       <BannerCarousel slides={bannerSlides} />
 
       <section>
+        <SectionTitle eyebrow="Wallet" title="Quick Access" />
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => onQuickAction?.('Withdraw')}
+            className="rounded-[24px] bg-gradient-to-br from-emerald-500 to-emerald-700 px-4 py-4 text-left text-white shadow-[0_18px_35px_rgba(16,185,129,0.22)] transition hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/70">Wallet</p>
+            <p className="mt-2 text-xl font-semibold">Withdraw</p>
+            <p className="mt-1 text-sm text-white/80">Open withdrawal panel</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => onQuickAction?.('Recharge')}
+            className="rounded-[24px] bg-gradient-to-br from-blue-600 to-cyan-500 px-4 py-4 text-left text-white shadow-[0_18px_35px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/70">Wallet</p>
+            <p className="mt-2 text-xl font-semibold">Recharge</p>
+            <p className="mt-1 text-sm text-white/80">Open recharge panel</p>
+          </button>
+        </div>
+      </section>
+
+      <section>
         <SectionTitle eyebrow="Account" title="Quick Stats" />
         <div className="grid grid-cols-3 gap-3">
           {quickStats.map((item) => (

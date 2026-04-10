@@ -1,8 +1,8 @@
 export const tabs = [
   { key: 'home', label: 'Home', title: 'Home', icon: 'home' },
   { key: 'tasks', label: 'Tasks', title: 'Task Hall', icon: 'tasks' },
-  { key: 'earnings', label: 'Earnings', title: 'Earnings', icon: 'feed' },
-  { key: 'leaderboard', label: 'Rank', title: 'Leaderboard', icon: 'rank' },
+  { key: 'task-center', label: 'Task Center', title: 'Task Center', icon: 'feed' },
+  { key: 'support', label: 'Support', title: 'Customer Service', icon: 'support' },
   { key: 'profile', label: 'Profile', title: 'Profile', icon: 'user' },
 ]
 
@@ -119,74 +119,11 @@ export const tasks = [
     image:
       'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
     verified: ['Verified'],
-    description: 'Enter the assigned livestream, complete engagement actions, and submit screenshots for review.',
+    description: 'Watch the livestream, interact according to instructions, and submit screenshots for review.',
     rating: 4.5,
     commission: '$22',
     time: '12 mins',
     city: 'Nationwide',
     type: 'Easy',
   },
-  {
-    id: 106,
-    title: 'Brand Event Co-shoot',
-    price: 120,
-    location: 'Xihu',
-    badge: 'NEW',
-    image:
-      'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80',
-    verified: ['Verified', 'Video Verified'],
-    description: 'Assist with offline brand event shooting and upload the media files. Stable payout and clear workflow.',
-    rating: 4.9,
-    commission: '$120',
-    time: '50 mins',
-    city: 'Hangzhou',
-    type: 'High Pay',
-  },
-]
-
-export const earningsFeed = [
-  {
-    id: 1,
-    user: 'Luna_88',
-    amount: '$300',
-    text: 'Finished 3 high-commission tasks today. Energy is high and I am going for more tonight.',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
-    image:
-      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 2,
-    user: 'MasonGo',
-    amount: '$188',
-    text: 'My video verification task was approved and the payout arrived very quickly.',
-    avatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-    image:
-      'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 3,
-    user: 'CiciWin',
-    amount: '$520',
-    text: 'Daily check-in bonuses and task rewards were settled together today. New personal record.',
-    avatar:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80',
-    image:
-      'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80',
-  },
-]
-
-export const leaderboard = [
-  { id: 1, name: 'Nova Gold', amount: '$8,820', level: 'Top 1' },
-  { id: 2, name: 'Aiden Pro', amount: '$7,460', level: 'Top 2' },
-  { id: 3, name: 'Vivi Task King', amount: '$6,980', level: 'Top 3' },
-  { id: 4, name: 'Jay HighPay', amount: '$6,210', level: 'Top 4' },
-  { id: 5, name: 'Mia Rising', amount: '$5,860', level: 'Top 5' },
-]
-
-export const profileStats = [
-  { label: 'Balance', value: '$1,286' },
-  { label: 'Monthly Earnings', value: '$3,920' },
-  { label: 'Withdrawable', value: '$860' },
 ]

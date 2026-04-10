@@ -5,11 +5,11 @@ import { DetailSheet } from '../components/DetailSheet'
 import { tabs } from '../data/mock'
 import { EarningsPage } from '../pages/EarningsPage'
 import { HomePage } from '../pages/HomePage'
-import { LeaderboardPage } from '../pages/LeaderboardPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { RealNamePage } from '../pages/RealNamePage'
 import { RechargePage } from '../pages/RechargePage'
 import { SecurityCenterPage } from '../pages/SecurityCenterPage'
+import { SupportPage } from '../pages/SupportPage'
 import { TasksPage } from '../pages/TasksPage'
 import { VipPage } from '../pages/VipPage'
 
@@ -128,8 +128,8 @@ export function FrontendApp({
 
   const handleProfileMenu = (label) => {
     if (label === 'Task Records') {
-      setActiveTab('tasks')
-      showNotice('Task Hall opened.')
+      setActiveTab('task-center')
+      showNotice('Task center opened.')
       return
     }
 
@@ -142,7 +142,6 @@ export function FrontendApp({
     if (label === 'Recharge') {
       setActiveTab('earnings')
       showNotice('Recharge center opened.')
-      return
       return
     }
 
@@ -162,14 +161,20 @@ export function FrontendApp({
 
   const handleQuickAction = (label) => {
     if (label === 'Completed') {
-      setActiveTab('profile')
+      setActiveTab('task-center')
       showNotice('Opened your task records.')
       return
     }
 
-    if (label === 'Withdrawable' || label === 'Balance') {
+    if (label === 'Withdrawable' || label === 'Balance' || label === 'Withdraw') {
       setActiveTab('earnings')
       showNotice('Opened earnings and withdrawal page.')
+      return
+    }
+
+    if (label === 'Recharge') {
+      setActiveTab('earnings')
+      showNotice('Recharge center opened.')
       return
     }
 
@@ -190,6 +195,7 @@ export function FrontendApp({
         />
       )
     }
+
     if (detail.content === 'recharge') {
       return (
         <RechargePage
@@ -215,20 +221,9 @@ export function FrontendApp({
         />
       )
     }
+
     if (detail.content === 'vip') {
       return <VipPage frontendUser={frontendUser} />
-    }
-    if (detail.content === 'rank') {
-      return (
-        <div className="space-y-4">
-          <div className="rounded-3xl bg-slate-50 p-4">
-            <p className="text-sm font-semibold text-slate-900">{detail.item?.name}</p>
-            <p className="mt-2 text-sm text-slate-500">Level: {detail.item?.level}</p>
-            <p className="mt-2 text-sm text-slate-500">Total Earnings: {detail.item?.amount}</p>
-          </div>
-          <p className="text-sm leading-6 text-slate-500">This user has a high completion rate this week. Rankings update based on approved tasks and total earnings.</p>
-        </div>
-      )
     }
 
     if (detail.content === 'feed') {
@@ -266,6 +261,21 @@ export function FrontendApp({
       case 'tasks':
         return (
           <TasksPage
+            mode="claim"
+            platformData={mergedPlatformData}
+            onOpenTask={handleOpenTask}
+            onStartTask={handleStartTask}
+            onOpenProfile={() => {
+              setActiveTab('profile')
+              showNotice('Opened Profile. Check your task records for details.')
+            }}
+            submittingTaskId={submittingTaskId}
+          />
+        )
+      case 'task-center':
+        return (
+          <TasksPage
+            mode="view"
             platformData={mergedPlatformData}
             onOpenTask={handleOpenTask}
             onStartTask={handleStartTask}
@@ -287,13 +297,8 @@ export function FrontendApp({
             rechargeSubmitting={rechargeSubmitting}
           />
         )
-      case 'leaderboard':
-        return (
-          <LeaderboardPage
-            platformData={mergedPlatformData}
-            onRankClick={(item, index) => setDetail({ title: `Rank #${index + 1}`, subtitle: 'Ranking detail', content: 'rank', item })}
-          />
-        )
+      case 'support':
+        return <SupportPage supportLink={mergedPlatformData?.supportLink} />
       case 'profile':
         return (
           <ProfilePage
