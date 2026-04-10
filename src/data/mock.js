@@ -127,3 +127,29 @@ export const tasks = [
     type: 'Easy',
   },
 ]
+
+export const earningsFeed = [
+  {
+    id: 1,
+    user: 'User A862',
+    amount: '$120',
+    text: 'Finished 3 high-commission tasks today. Energy is high and going for more tonight.',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 2,
+    user: 'User K520',
+    amount: '$188',
+    text: 'Grabbed a high-commission video task and completed it successfully.',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
+  },
+]
+
+export const leaderboard = [
+  { id: 1, name: 'Aurora', level: 'VIP3', amount: '$4,820' },
+  { id: 2, name: 'Mason', level: 'VIP2', amount: '$3,760' },
+  { id: 3, name: 'Olivia', level: 'VIP2', amount: '$3,140' },
+  { id: 4, name: 'Ethan', level: 'VIP1', amount: '$2,580' },
+]
