@@ -7,6 +7,7 @@ const REGIONS = [
   'Indonesia',
   'Philippines',
   'Vietnam',
+  'Pakistan',
   'Hong Kong',
   'Other',
 ]
