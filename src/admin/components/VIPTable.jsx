@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 const VIP_DEFAULTS = [
   { id: 'vip1', name: 'VIP 1', commissionRate: '5%', withdrawLimit: '$500', orderTimes: 30, withdrawTimes: 3, minBalance: '$0' },
@@ -9,17 +9,15 @@ const VIP_DEFAULTS = [
 const inputClass = 'h-9 w-full rounded-lg border border-slate-200 px-2 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
 
 export function VIPTable({ rows = [], onSaveVipLevels, saving }) {
-  const [levels, setLevels] = useState([])
+  const sourceLevels = useMemo(() => (rows.length ? rows : VIP_DEFAULTS), [rows])
+  const [levels, setLevels] = useState(sourceLevels)
   const [dirty, setDirty] = useState(false)
 
-  useEffect(() => {
-    const source = rows.length ? rows : VIP_DEFAULTS
-    setLevels(source)
-    setDirty(false)
-  }, [rows])
+  const displayLevels = dirty ? levels : sourceLevels
 
   const update = (index, key, value) => {
-    setLevels((prev) => prev.map((item, i) => (i === index ? { ...item, [key]: value } : item)))
+    const base = dirty ? levels : sourceLevels
+    setLevels(base.map((item, i) => (i === index ? { ...item, [key]: value } : item)))
     setDirty(true)
   }
 
@@ -44,7 +42,7 @@ export function VIPTable({ rows = [], onSaveVipLevels, saving }) {
           <button
             type="button"
             disabled={!dirty || saving}
-            onClick={() => onSaveVipLevels?.(levels)}
+            onClick={() => onSaveVipLevels?.(displayLevels)}
             className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-40"
           >
             {saving ? 'Saving...' : 'Save Changes'}
@@ -52,7 +50,7 @@ export function VIPTable({ rows = [], onSaveVipLevels, saving }) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {levels.map((level, index) => (
+          {displayLevels.map((level, index) => (
             <div key={level.id ?? index} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{level.name}</p>
               <div className="space-y-2">

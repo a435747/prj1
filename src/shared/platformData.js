@@ -19,20 +19,11 @@ function isApprovedStatus(status) {
   return status === '已通过' || status === 'approved'
 }
 
-function isRejectedStatus(status) {
-  return status === '已驳回' || status === 'rejected'
-}
-
 function isUnderReviewStatus(status) {
   return status === '待审核' || status === 'under_review'
 }
 
-function isPendingProofStatus(status) {
-  return status === '待提交' || status === 'pending_proof'
-}
-
 const claimedTasks = []
-
 const withdrawRequests = []
 
 function parseDollar(value) {
@@ -62,8 +53,16 @@ function buildHomeStats(taskClaims, withdraws, existingHomeStats = []) {
   const approvedWithdrawAmount = getApprovedWithdrawAmount(withdraws)
 
   return [
-    { label: 'Today Earnings', value: `$${(BASE_TODAY_EARNINGS + completedAmount - approvedWithdrawAmount).toFixed(0)}`, sub: '+12.8%' },
-    existingHomeStats[1] ?? { label: 'Online Users', value: BASE_ONLINE_COUNT, sub: 'Real-time online' },
+    {
+      label: 'Today Earnings',
+      value: `$${(BASE_TODAY_EARNINGS + completedAmount - approvedWithdrawAmount).toFixed(0)}`,
+      sub: '+12.8%',
+    },
+    existingHomeStats[1] ?? {
+      label: 'Online Users',
+      value: BASE_ONLINE_COUNT,
+      sub: 'Real-time online',
+    },
   ]
 }
 
@@ -94,7 +93,6 @@ function buildProfile(taskClaims, withdraws) {
     name: 'Premium Member',
     subtitle: `${taskClaims.length} tasks claimed / ${withdraws.length} withdrawals made`,
     rechargeRequests: [],
-    // name is overridden in FrontendApp with actual username
     stats: [
       { label: 'Balance', value: `$${balance.toFixed(0)}` },
       { label: 'Completed', value: `${BASE_COMPLETED + completed}` },
@@ -141,7 +139,7 @@ export const initialPlatformData = {
     city: task.city,
     image: task.image,
   })),
-  taskFilters: ['All', 'High Pay', 'Easy', 'Nearby'],
+  taskFilters: ['All', 'Clothing', 'Shoes', 'Bags', 'Accessories'],
   tasks,
   claimedTasks,
   withdrawRequests,
@@ -152,9 +150,7 @@ export const initialPlatformData = {
 }
 
 function buildWithdrawProgress(taskClaims, allTasks, rules) {
-  const completedClaims = taskClaims.filter(
-    (c) => c.status === '已完成' || c.status === 'completed',
-  )
+  const completedClaims = taskClaims.filter((c) => c.status === '已完成' || c.status === 'completed')
   const completedScore = completedClaims.reduce((sum, claim) => {
     const task = (allTasks ?? []).find((t) => t.id === claim.taskId)
     const multiplier = Number(task?.multiplier ?? 1)
@@ -164,8 +160,8 @@ function buildWithdrawProgress(taskClaims, allTasks, rules) {
   const completedCount = completedClaims.length
   const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
 
-  const activeRule = (rules ?? []).find((r) => {
-    const name = String(r.name || '').toLowerCase()
+  const activeRule = (rules ?? []).find((rule) => {
+    const name = String(rule.name || '').toLowerCase()
     if (vipLevel === 'VIP3' && name.includes('vip3')) return true
     if (vipLevel === 'VIP2' && (name.includes('vip2') || name.includes('高佣'))) return true
     return true

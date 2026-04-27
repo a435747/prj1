@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 export function RejectReasonModal({ open, title = '填写驳回原因', initialValue = '', confirmText = '确认驳回', onClose, onConfirm }) {
   const [reason, setReason] = useState(initialValue)
-
-  useEffect(() => {
-    setReason(initialValue)
-  }, [initialValue, open])
+  const displayReason = useMemo(() => (open ? initialValue : reason), [initialValue, open, reason])
 
   if (!open) return null
 
@@ -29,7 +26,7 @@ export function RejectReasonModal({ open, title = '填写驳回原因', initialV
 
         <div className="mt-5 space-y-3">
           <textarea
-            value={reason}
+            value={displayReason}
             onChange={(event) => setReason(event.target.value)}
             rows={6}
             placeholder="例如：证件信息不清晰，请上传清晰无遮挡的证件照片。"
@@ -37,7 +34,7 @@ export function RejectReasonModal({ open, title = '填写驳回原因', initialV
           />
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span>建议填写具体原因，减少重复提交。</span>
-            <span>{reason.length} 字</span>
+            <span>{displayReason.length} 字</span>
           </div>
         </div>
 
@@ -52,10 +49,10 @@ export function RejectReasonModal({ open, title = '填写驳回原因', initialV
           <button
             type="button"
             onClick={() => {
-              if (!reason.trim()) return
-              onConfirm(reason.trim())
+              if (!displayReason.trim()) return
+              onConfirm(displayReason.trim())
             }}
-            disabled={!reason.trim()}
+            disabled={!displayReason.trim()}
             className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {confirmText}

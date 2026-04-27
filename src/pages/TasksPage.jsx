@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { TaskDetailCard } from '../components/TaskDetailCard'
 import { tasks as fallbackTasks } from '../data/mock'
 
@@ -13,7 +13,7 @@ function claimStatusBadge(status) {
   return { label: 'Pending', cls: 'bg-amber-500' }
 }
 
-export function TasksPage({ platformData, onStartTask, onOpenProfile, submittingTaskId, mode = 'claim' }) {
+export function TasksPage({ platformData, onStartTask, onOpenProfile, submittingTaskId, mode = 'claim', onSubmitOrderInfo }) {
   const [selectedTask, setSelectedTask] = useState(null)
 
   const tasks = platformData?.tasks ?? fallbackTasks
@@ -113,7 +113,7 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
                       <img src={task.image} alt={task.title} className="h-28 w-full object-cover" />
                       {locked ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[22px] bg-black/50">
-                          <span className="text-2xl">🔒</span>
+                          <span className="text-2xl">馃敀</span>
                           <span className="mt-1 text-[10px] font-bold text-white">Min ${minAmount}</span>
                         </div>
                       ) : (
@@ -172,6 +172,7 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
               claim={selectedClaim}
               submitting={submittingTaskId === selectedTask.id}
               onStart={mode === 'claim' ? handleStartTask : undefined}
+              onSubmitOrderInfo={onSubmitOrderInfo}
               onOpenProfile={() => { onOpenProfile?.(); setSelectedTask(null) }}
             />
           </div>
@@ -180,3 +181,4 @@ export function TasksPage({ platformData, onStartTask, onOpenProfile, submitting
     </div>
   )
 }
+

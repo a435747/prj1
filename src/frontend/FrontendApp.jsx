@@ -68,7 +68,6 @@ export function FrontendApp({
     try {
       setSubmittingTaskId(task.id)
       await onClaimTask?.(task.id)
-      setActiveTab('profile')
       showNotice(`Task claimed successfully: ${task.title}`)
     } catch (error) {
       showNotice(error.message || 'Failed to claim task. Please try again later.')
@@ -83,7 +82,7 @@ export function FrontendApp({
     try {
       setProofSubmittingId(claimId)
       await onSubmitTaskProof?.(claimId, proofText)
-      showNotice('Proof submitted successfully. Waiting for review.')
+      showNotice('Shipping information submitted successfully. Waiting for review.')
     } catch (error) {
       showNotice(error.message || 'Submission failed. Please try again later.')
       throw error
@@ -184,6 +183,7 @@ export function FrontendApp({
 
   const renderDetailContent = () => {
     if (!detail) return null
+
     if (detail.content === 'real-name') {
       return (
         <RealNamePage
@@ -226,21 +226,6 @@ export function FrontendApp({
       return <VipPage frontendUser={frontendUser} />
     }
 
-    if (detail.content === 'feed') {
-      return (
-        <div className="space-y-4">
-          <img src={detail.item?.image} alt={detail.item?.text} className="h-52 w-full rounded-[24px] object-cover" />
-          <div className="rounded-3xl bg-slate-50 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-slate-900">{detail.item?.user}</p>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">{detail.item?.amount}</span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{detail.item?.text}</p>
-          </div>
-        </div>
-      )
-    }
-
     return null
   }
 
@@ -265,6 +250,7 @@ export function FrontendApp({
             platformData={mergedPlatformData}
             onOpenTask={handleOpenTask}
             onStartTask={handleStartTask}
+            onSubmitOrderInfo={handleSubmitProof}
             onOpenProfile={() => {
               setActiveTab('profile')
               showNotice('Opened Profile. Check your task records for details.')
@@ -279,6 +265,7 @@ export function FrontendApp({
             platformData={mergedPlatformData}
             onOpenTask={handleOpenTask}
             onStartTask={handleStartTask}
+            onSubmitOrderInfo={handleSubmitProof}
             onOpenProfile={() => {
               setActiveTab('profile')
               showNotice('Opened Profile. Check your task records for details.')

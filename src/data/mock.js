@@ -1,3 +1,148 @@
+const PRODUCT_TASK_SETS = [
+  {
+    title: 'Women\'s Jacket',
+    image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80',
+    category: 'Clothing',
+    store: 'Official Clothing Store',
+    city: 'Mall Order',
+    basePrice: 58,
+    badge: 'HOT',
+  },
+  {
+    title: 'Running Shoes',
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+    category: 'Shoes',
+    store: 'Official Sneaker Store',
+    city: 'Mall Order',
+    basePrice: 72,
+    badge: 'NEW',
+  },
+  {
+    title: 'Handbag',
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+    category: 'Bags',
+    store: 'Official Bag Store',
+    city: 'Mall Order',
+    basePrice: 168,
+    badge: 'VIP',
+  },
+  {
+    title: 'Casual Shoes',
+    image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=800&q=80',
+    category: 'Shoes',
+    store: 'Brand Shoes Store',
+    city: 'Mall Order',
+    basePrice: 96,
+    badge: 'HOT',
+  },
+  {
+    title: 'Men\'s Hoodie',
+    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80',
+    category: 'Clothing',
+    store: 'Streetwear Store',
+    city: 'Mall Order',
+    basePrice: 88,
+    badge: 'NEW',
+  },
+  {
+    title: 'Women\'s Dress',
+    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80',
+    category: 'Clothing',
+    store: 'Fashion Boutique',
+    city: 'Mall Order',
+    basePrice: 76,
+    badge: 'HOT',
+  },
+  {
+    title: 'Leather Backpack',
+    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80',
+    category: 'Bags',
+    store: 'Travel Goods Store',
+    city: 'Mall Order',
+    basePrice: 134,
+    badge: 'TOP',
+  },
+  {
+    title: 'Baseball Cap',
+    image: 'https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=800&q=80',
+    category: 'Accessories',
+    store: 'Accessories Store',
+    city: 'Mall Order',
+    basePrice: 42,
+    badge: 'NEW',
+  },
+  {
+    title: 'Sports Set',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
+    category: 'Clothing',
+    store: 'Fitness Apparel Store',
+    city: 'Mall Order',
+    basePrice: 118,
+    badge: 'HOT',
+  },
+  {
+    title: 'Wallet',
+    image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80',
+    category: 'Bags',
+    store: 'Leather Goods Store',
+    city: 'Mall Order',
+    basePrice: 64,
+    badge: 'TOP',
+  },
+]
+
+const COLORS = ['Black', 'White', 'Grey', 'Beige', 'Blue', 'Pink', 'Brown', 'Khaki']
+const SIZES = ['S', 'M', 'L', 'XL', '39', '40', '41', '42', 'One Size']
+const QUANTITIES = [1, 1, 1, 2]
+
+function buildTask(seed, config) {
+  const variants = ['Mall Purchase', 'Store Order', 'Product Order', 'Shopping Task', 'Online Order']
+  const proofSets = [
+    ['Order Screenshot', 'Shipping Info Required'],
+    ['Receiver Details', 'Phone Number Required'],
+    ['Address Submission', 'Order Confirmation'],
+    ['Product Link', 'Shipping Info Required'],
+    ['Contact Info', 'Delivery Address'],
+  ]
+  const title = `${config.title} ${variants[seed % variants.length]}`
+  const price = config.basePrice + (seed % 7) * 6
+  const verified = proofSets[seed % proofSets.length]
+  const time = `${10 + (seed % 6) * 3} mins`
+  const color = COLORS[seed % COLORS.length]
+  const size = config.category === 'Bags' || config.category === 'Accessories'
+    ? 'One Size'
+    : SIZES[seed % (SIZES.length - 1)]
+  const quantity = QUANTITIES[seed % QUANTITIES.length]
+  const sku = `SKU-${config.category.slice(0, 3).toUpperCase()}-${1000 + seed}`
+  const shopName = `${config.store} Flagship Shop`
+
+  return {
+    id: 101 + seed,
+    title,
+    price,
+    location: config.store,
+    badge: config.badge,
+    image: config.image,
+    verified,
+    description: `Help place an order for the ${config.title.toLowerCase()} product in the online shop. After claiming the task, submit consignee name, phone number, and full shipping address to complete the order request.`,
+    rating: Number((4.5 + ((seed % 5) * 0.1)).toFixed(1)),
+    commission: `$${price}`,
+    time,
+    city: config.city,
+    type: config.category,
+    color,
+    size,
+    quantity,
+    sku,
+    shopName,
+  }
+}
+
+export const tasks = Array.from({ length: 55 }, (_, index) => {
+  const config = PRODUCT_TASK_SETS[index % PRODUCT_TASK_SETS.length]
+  return buildTask(index, config)
+})
+
 export const tabs = [
   { key: 'home', label: 'Home', title: 'Home', icon: 'home' },
   { key: 'tasks', label: 'Tasks', title: 'Task Hall', icon: 'tasks' },
@@ -7,143 +152,39 @@ export const tabs = [
 ]
 
 export const tickerItems = [
-  'User A862 completed 8 orders today and earned $120',
-  'User M118 withdrew $460 today and it has arrived',
-  'User K520 grabbed a high-commission task and earned $188',
-  'User P903 checked in for 7 straight days and received $66',
+  'User A862 completed a women\'s jacket order and earned $120',
+  'User M118 confirmed a sneaker order and withdrew $460',
+  'User K520 grabbed a clothing mall order and earned $188',
+  'User P903 completed 7 product purchase tasks in a row and received $66',
 ]
 
-export const featuredTasks = [
-  {
-    id: 1,
-    title: 'Brand Store Visit',
-    price: 128,
-    tag: 'HOT',
-    city: 'Shanghai',
-    image:
-      'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 2,
-    title: 'Short Video Voiceover Trial',
-    price: 86,
-    tag: 'NEW',
-    city: 'Hangzhou',
-    image:
-      'https://images.unsplash.com/photo-1494173853739-c21f58b16055?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 3,
-    title: 'Premium Dining Shoot',
-    price: 200,
-    tag: 'HOT',
-    city: 'Shenzhen',
-    image:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
-  },
-]
+export const featuredTasks = tasks.slice(0, 3).map((task) => ({
+  id: task.id,
+  title: task.title,
+  price: task.price,
+  tag: task.badge,
+  city: task.city,
+  image: task.image,
+}))
 
-export const taskFilters = ['All', 'High Pay', 'Easy', 'Nearby']
-
-export const tasks = [
-  {
-    id: 101,
-    title: 'Store Check-in Shoot',
-    price: 58,
-    location: 'Pudong',
-    badge: 'HOT',
-    image:
-      'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=800&q=80',
-    verified: ['Verified', 'Video Verified'],
-    description: 'Visit the store, complete the required camera shots, and submit a review. Great for beginners with fast approval.',
-    rating: 4.8,
-    commission: '$58',
-    time: '25 mins',
-    city: 'Shanghai',
-    type: 'Nearby',
-  },
-  {
-    id: 102,
-    title: 'App New User Trial',
-    price: 18,
-    location: 'Online',
-    badge: 'NEW',
-    image:
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
-    verified: ['Verified'],
-    description: 'Download the app and complete the onboarding process to get paid. Simple and ideal for spare time.',
-    rating: 4.6,
-    commission: '$18',
-    time: '8 mins',
-    city: 'Nationwide',
-    type: 'Easy',
-  },
-  {
-    id: 103,
-    title: 'High-Commission Store Video',
-    price: 168,
-    location: 'Tianhe',
-    badge: 'HOT',
-    image:
-      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-    verified: ['Verified', 'Video Verified'],
-    description: 'Create and upload a 30-second video clip. High commission task and must follow the given template.',
-    rating: 4.9,
-    commission: '$168',
-    time: '45 mins',
-    city: 'Guangzhou',
-    type: 'High Pay',
-  },
-  {
-    id: 104,
-    title: 'Coffee Shop Review',
-    price: 36,
-    location: 'Futian',
-    badge: 'NEW',
-    image:
-      'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80',
-    verified: ['Verified'],
-    description: 'Make a purchase in-store, upload your receipt, and submit your experience review for same-day approval.',
-    rating: 4.7,
-    commission: '$36',
-    time: '20 mins',
-    city: 'Shenzhen',
-    type: 'Nearby',
-  },
-  {
-    id: 105,
-    title: 'Livestream Engagement Task',
-    price: 22,
-    location: 'Online',
-    badge: 'HOT',
-    image:
-      'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
-    verified: ['Verified'],
-    description: 'Watch the livestream, interact according to instructions, and submit screenshots for review.',
-    rating: 4.5,
-    commission: '$22',
-    time: '12 mins',
-    city: 'Nationwide',
-    type: 'Easy',
-  },
-]
+export const taskFilters = ['All', 'Clothing', 'Shoes', 'Bags', 'Accessories']
 
 export const earningsFeed = [
   {
     id: 1,
     user: 'User A862',
     amount: '$120',
-    text: 'Finished 3 high-commission tasks today. Energy is high and going for more tonight.',
+    text: 'Completed a women\'s clothing order task and received the commission successfully.',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
-    image: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=800&q=80',
+    image: tasks[0].image,
   },
   {
     id: 2,
     user: 'User K520',
     amount: '$188',
-    text: 'Grabbed a high-commission video task and completed it successfully.',
+    text: 'Finished a sneaker mall order and submitted delivery details smoothly.',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
+    image: tasks[1].image,
   },
 ]
 
