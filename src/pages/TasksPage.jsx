@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { TaskDetailCard } from '../components/TaskDetailCard'
 import { tasks as fallbackTasks } from '../data/mock'
 
