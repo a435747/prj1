@@ -16,6 +16,7 @@ export const DEFAULT_ADMIN_TOKEN = 'demo-admin-token'
 export const DEFAULT_USER_USERNAME = 'aurora'
 export const DEFAULT_USER_PASSWORD = '123456'
 export const DEFAULT_USER_TOKEN = 'demo-user-token'
+export const DEFAULT_INVITE_CODE = 'TTS2026'
 
 const adminUsername = process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME
 const adminPassword = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
@@ -46,6 +47,11 @@ export const defaultDb = {
     {
       id: 'user-1001',
       username: defaultUserUsername,
+      nickname: 'Aurora',
+      phone: '+65 9000 1001',
+      region: 'Singapore',
+      inviteCode: DEFAULT_INVITE_CODE,
+      invitedBy: 'SYSTEM',
       password: defaultUserPassword,
       token: defaultUserToken,
       verification: null,

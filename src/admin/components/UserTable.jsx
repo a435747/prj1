@@ -4,6 +4,11 @@ import { DataTable } from './DataTable'
 const columns = [
   { key: 'id', label: 'ID' },
   { key: 'username', label: 'Username' },
+  { key: 'nickname', label: 'Nickname' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'region', label: 'Region' },
+  { key: 'inviteCode', label: 'Invite Code' },
+  { key: 'invitedBy', label: 'Invited By' },
   { key: 'frozen', label: 'Status' },
   { key: 'verification', label: 'Verification' },
   { key: 'createdAt', label: 'Registered At' },
@@ -11,12 +16,12 @@ const columns = [
 
 export function UserTable({ rows = [], page, onPageChange, onFreezeUser, onEditUser, processingId }) {
   const [editingId, setEditingId] = useState(null)
-  const [editUsername, setEditUsername] = useState('')
+  const [editForm, setEditForm] = useState({ username: '', nickname: '', phone: '', region: '' })
 
   return (
     <DataTable
       title="User Management"
-      description="View and manage frontend user accounts. Freeze suspicious accounts immediately."
+      description="View and manage frontend user accounts, contact information, invite relations, and risk status."
       columns={columns}
       rows={rows}
       page={page}
@@ -50,31 +55,55 @@ export function UserTable({ rows = [], page, onPageChange, onFreezeUser, onEditU
 
         if (editingId === row.id) {
           return (
-            <div className="flex items-center gap-2">
+            <div className="grid min-w-[220px] gap-2">
               <input
                 type="text"
-                value={editUsername}
-                onChange={(e) => setEditUsername(e.target.value)}
+                value={editForm.username}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, username: e.target.value }))}
+                placeholder="Username"
                 className="h-8 rounded-lg border border-slate-200 px-2 text-xs outline-none focus:border-blue-400"
               />
-              <button
-                type="button"
-                disabled={isProcessing || !editUsername.trim()}
-                onClick={() => {
-                  onEditUser?.(row.id, { username: editUsername })
-                  setEditingId(null)
-                }}
-                className="rounded-md bg-blue-50 px-3 py-1 text-xs text-blue-600 transition hover:bg-blue-100 disabled:opacity-50"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingId(null)}
-                className="rounded-md bg-slate-50 px-3 py-1 text-xs text-slate-500 transition hover:bg-slate-100"
-              >
-                Cancel
-              </button>
+              <input
+                type="text"
+                value={editForm.nickname}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, nickname: e.target.value }))}
+                placeholder="Nickname"
+                className="h-8 rounded-lg border border-slate-200 px-2 text-xs outline-none focus:border-blue-400"
+              />
+              <input
+                type="text"
+                value={editForm.phone}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                placeholder="Phone"
+                className="h-8 rounded-lg border border-slate-200 px-2 text-xs outline-none focus:border-blue-400"
+              />
+              <input
+                type="text"
+                value={editForm.region}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, region: e.target.value }))}
+                placeholder="Region"
+                className="h-8 rounded-lg border border-slate-200 px-2 text-xs outline-none focus:border-blue-400"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isProcessing || !editForm.username.trim()}
+                  onClick={() => {
+                    onEditUser?.(row.id, editForm)
+                    setEditingId(null)
+                  }}
+                  className="rounded-md bg-blue-50 px-3 py-1 text-xs text-blue-600 transition hover:bg-blue-100 disabled:opacity-50"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="rounded-md bg-slate-50 px-3 py-1 text-xs text-slate-500 transition hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )
         }
@@ -86,7 +115,12 @@ export function UserTable({ rows = [], page, onPageChange, onFreezeUser, onEditU
               disabled={isProcessing}
               onClick={() => {
                 setEditingId(row.id)
-                setEditUsername(row.username)
+                setEditForm({
+                  username: row.username ?? '',
+                  nickname: row.nickname ?? '',
+                  phone: row.phone ?? '',
+                  region: row.region ?? '',
+                })
               }}
               className="rounded-md bg-blue-50 px-3 py-1 text-xs text-blue-600 transition hover:bg-blue-100 disabled:opacity-50"
             >

@@ -177,6 +177,7 @@ function App() {
             setFrontendUser(result.user)
             await refreshFrontendData(result.token)
             showToast('Registration successful', `Account created for ${result.user.username}.`)
+            return result
           }}
         />
       </>

@@ -3,7 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_TOKEN, DEFAULT_ADMIN_USERNAME } from './defaultData.js'
+import { DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_TOKEN, DEFAULT_ADMIN_USERNAME, DEFAULT_INVITE_CODE } from './defaultData.js'
 import { ensureDb, readDb, updateDb } from './storage.js'
 import { derivePlatformData } from '../src/shared/platformData.js'
 
@@ -116,14 +116,40 @@ app.get('/api/auth/me', adminAuth, (_req, res) => {
 })
 
 app.post('/api/frontend-auth/register', (req, res) => {
-  const { username, password } = req.body
-  if (!String(username || '').trim() || String(username).length < 3) return res.status(400).json({ message: 'Username must be at least 3 characters.' })
+  const { username, nickname, phone, region, password, inviteCode, agreeTerms, confirmAdult } = req.body
+  const cleanUsername = String(username || '').trim()
+  const cleanNickname = String(nickname || '').trim()
+  const cleanPhone = String(phone || '').trim()
+  const cleanRegion = String(region || '').trim()
+  const cleanInviteCode = String(inviteCode || '').trim()
+
+  if (!cleanUsername || cleanUsername.length < 3) return res.status(400).json({ message: 'Username must be at least 3 characters.' })
+  if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return res.status(400).json({ message: 'Username can only contain letters, numbers, and underscores.' })
+  if (!cleanNickname || cleanNickname.length < 2) return res.status(400).json({ message: 'Nickname must be at least 2 characters.' })
+  if (!/^\+?[0-9\s-]{6,20}$/.test(cleanPhone)) return res.status(400).json({ message: 'Please enter a valid phone number.' })
+  if (!cleanRegion) return res.status(400).json({ message: 'Please select your region.' })
   if (!password || String(password).length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters.' })
+  if (!cleanInviteCode) return res.status(400).json({ message: 'Invitation code is required.' })
+  if (!agreeTerms) return res.status(400).json({ message: 'Please agree to the platform terms.' })
+  if (!confirmAdult) return res.status(400).json({ message: 'You must confirm that you are at least 18 years old.' })
+
+  const existingDb = readDb()
+  const inviter = (existingDb.frontendUsers ?? []).find((u) => u.username === cleanInviteCode || u.inviteCode === cleanInviteCode)
+  const isSystemInvite = cleanInviteCode === DEFAULT_INVITE_CODE || cleanInviteCode.toUpperCase() === 'TTS2026'
+  if (!isSystemInvite && !inviter) return res.status(400).json({ message: 'Invalid invitation code. Please contact your referrer.' })
+
   const db = updateDb((current) => {
-    const exists = (current.frontendUsers ?? []).some((u) => u.username === String(username).trim())
+    const exists = (current.frontendUsers ?? []).some((u) => u.username === cleanUsername || u.phone === cleanPhone)
     if (exists) return current
     const newUser = {
-      id: `user-${Date.now()}`, username: String(username).trim(), password: String(password),
+      id: `user-${Date.now()}`,
+      username: cleanUsername,
+      nickname: cleanNickname,
+      phone: cleanPhone,
+      region: cleanRegion,
+      inviteCode: cleanInviteCode,
+      invitedBy: isSystemInvite ? 'SYSTEM' : inviter.username,
+      password: String(password),
       token: `token-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,
       ruleId: (current.adminData?.rules ?? []).find((r) => r.isDefault)?.id ?? null,
       platformData: derivePlatformData({ ...current.platformData, claimedTasks: [], withdrawRequests: [] }),
@@ -131,9 +157,10 @@ app.post('/api/frontend-auth/register', (req, res) => {
     }
     return { ...current, frontendUsers: [newUser, ...(current.frontendUsers ?? [])] }
   })
-  const newUser = (db.frontendUsers ?? []).find((u) => u.username === String(username).trim())
-  if (!newUser) return res.status(400).json({ message: 'Username already exists.' })
-  return res.json({ token: newUser.token, user: { id: newUser.id, username: newUser.username } })
+
+  const newUser = (db.frontendUsers ?? []).find((u) => u.username === cleanUsername)
+  if (!newUser) return res.status(400).json({ message: 'Username or phone number already exists.' })
+  return res.json({ token: newUser.token, user: { id: newUser.id, username: newUser.username, nickname: newUser.nickname, phone: newUser.phone, region: newUser.region, invitedBy: newUser.invitedBy } })
 })
 
 app.post('/api/frontend-auth/login', (req, res) => {
@@ -197,7 +224,7 @@ app.get('/api/platform', (req, res) => {
   if (!token) return res.json({ ...derivePlatformData(db.platformData), rules })
   const user = (db.frontendUsers ?? []).find((u) => u.token === token)
   if (!user) return res.json({ ...derivePlatformData(db.platformData), rules })
-  const completedCount = (user.platformData.claimedTasks ?? []).filter((c) => c.status === 'completed' || c.status === '已完成').length
+  const completedCount = (user.platformData.claimedTasks ?? []).filter((c) => c.status === 'completed' || c.status === '宸插畬鎴?).length
   const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
   let activeRule = user.ruleId ? rules.find((r) => r.id === user.ruleId) : null
   if (!activeRule) activeRule = rules.find((r) => r.isDefault) ?? rules[0]
@@ -209,11 +236,11 @@ app.post('/api/platform/claim-task', frontendAuth, (req, res) => {
   const task = (db.platformData.tasks ?? []).find((item) => item.id === taskId)
   if (!task) return res.status(404).json({ message: 'Task not found.' })
   const exists = (req.frontendUser.platformData.claimedTasks ?? []).some(
-    (item) => item.taskId === taskId && item.status !== '已驳回' && item.status !== 'rejected',
+    (item) => item.taskId === taskId && item.status !== '宸查┏鍥? && item.status !== 'rejected',
   )
   if (exists) return res.status(400).json({ message: 'This task has already been claimed.' })
   const rules = db.adminData?.rules ?? []
-  const completedCount = (req.frontendUser.platformData.claimedTasks ?? []).filter((c) => c.status === 'completed' || c.status === '已完成').length
+  const completedCount = (req.frontendUser.platformData.claimedTasks ?? []).filter((c) => c.status === 'completed' || c.status === '宸插畬鎴?).length
   const vipLevel = completedCount >= 20 ? 'VIP3' : completedCount >= 5 ? 'VIP2' : 'VIP1'
   let activeRule = req.frontendUser.ruleId ? rules.find((r) => r.id === req.frontendUser.ruleId) : null
   if (!activeRule) activeRule = rules.find((r) => r.isDefault) ?? rules[0]
@@ -225,7 +252,7 @@ app.post('/api/platform/claim-task', frontendAuth, (req, res) => {
   }
   const claim = {
     id: `claim-${Date.now()}`, taskId: task.id, username: req.frontendUser.username,
-    title: task.title, amount: formatAmount(task.price), status: '待提交',
+    title: task.title, amount: formatAmount(task.price), status: '寰呮彁浜?,
     createdAt: formatTimestamp(), submittedAt: '', reviewedAt: '', proofText: '',
     image: task.image, summary: `Claimed ${task.title}. Please submit proof.`,
   }
@@ -250,13 +277,13 @@ app.post('/api/platform/task-claims/:claimId/submit', frontendAuth, (req, res) =
     const nextUsers = [...current.frontendUsers]
     const nextClaims = (nextUsers[ui].platformData.claimedTasks ?? []).map((claim) => {
       if (claim.id !== claimId) return claim
-      if (!['待提交','pending_proof','已驳回','rejected'].includes(claim.status)) return claim
-      updatedClaim = { ...claim, status: '待审核', submittedAt: formatTimestamp(), proofText: String(proofText).trim(), summary: 'Proof submitted. Waiting for review.' }
+      if (!['寰呮彁浜?,'pending_proof','宸查┏鍥?,'rejected'].includes(claim.status)) return claim
+      updatedClaim = { ...claim, status: '寰呭鏍?, submittedAt: formatTimestamp(), proofText: String(proofText).trim(), summary: 'Proof submitted. Waiting for review.' }
       return updatedClaim
     })
     if (!updatedClaim) return current
     nextUsers[ui] = { ...nextUsers[ui], platformData: derivePlatformData({ ...nextUsers[ui].platformData, claimedTasks: nextClaims }) }
-    return { ...current, frontendUsers: nextUsers, platformData: derivePlatformData({ ...current.platformData, claimedTasks: (current.platformData.claimedTasks ?? []).map((c) => c.id === claimId ? updatedClaim : c) }), adminData: updateOrderStatus(current.adminData, updatedClaim, '待审核') }
+    return { ...current, frontendUsers: nextUsers, platformData: derivePlatformData({ ...current.platformData, claimedTasks: (current.platformData.claimedTasks ?? []).map((c) => c.id === claimId ? updatedClaim : c) }), adminData: updateOrderStatus(current.adminData, updatedClaim, '寰呭鏍?) }
   })
   if (!updatedClaim) return res.status(404).json({ message: 'Task not found or cannot be submitted.' })
   const updatedUser = (nextDb.frontendUsers ?? []).find((u) => u.id === req.frontendUser.id)
@@ -272,7 +299,7 @@ app.post('/api/platform/withdraw-requests', frontendAuth, (req, res) => {
   const rules = db.adminData?.rules ?? []
   let activeRule = req.frontendUser.ruleId ? rules.find((r) => r.id === req.frontendUser.ruleId) : null
   if (!activeRule) activeRule = rules.find((r) => r.isDefault) ?? rules[0]
-  const completedClaims = (req.frontendUser.platformData.claimedTasks ?? []).filter((c) => c.status === 'completed' || c.status === '已完成')
+  const completedClaims = (req.frontendUser.platformData.claimedTasks ?? []).filter((c) => c.status === 'completed' || c.status === '宸插畬鎴?)
   const completedScore = completedClaims.reduce((sum, c) => sum + (Number(c.multiplier) || 1), 0)
   const requiredScore = Number(activeRule?.requiredTaskCount ?? 0)
   if (requiredScore > 0 && completedScore < requiredScore) {
@@ -285,7 +312,7 @@ app.post('/api/platform/withdraw-requests', frontendAuth, (req, res) => {
     const nextUsers = [...current.frontendUsers]
     const withdrawable = parseDollar(derivePlatformData(nextUsers[ui].platformData).quickStats?.find((s) => s.label === 'Withdrawable')?.value)
     if (amountNum > withdrawable) return current
-    createdRequest = { id: `withdraw-${Date.now()}`, username: req.frontendUser.username, amount: formatAmount(amountNum), status: '待审核', createdAt: formatTimestamp(), reviewedAt: '', accountType: String(accountType).trim(), bankName: String(bankName||'').trim(), accountNo: String(accountNo).trim(), summary: 'Withdrawal submitted. Waiting for review.' }
+    createdRequest = { id: `withdraw-${Date.now()}`, username: req.frontendUser.username, amount: formatAmount(amountNum), status: '寰呭鏍?, createdAt: formatTimestamp(), reviewedAt: '', accountType: String(accountType).trim(), bankName: String(bankName||'').trim(), accountNo: String(accountNo).trim(), summary: 'Withdrawal submitted. Waiting for review.' }
     nextUsers[ui] = { ...nextUsers[ui], platformData: derivePlatformData({ ...nextUsers[ui].platformData, withdrawRequests: [createdRequest, ...(nextUsers[ui].platformData.withdrawRequests ?? [])] }) }
     return { ...current, frontendUsers: nextUsers, platformData: derivePlatformData({ ...current.platformData, withdrawRequests: [createdRequest, ...(current.platformData.withdrawRequests ?? [])] }), adminData: appendWithdrawFromRequest(current.adminData, createdRequest) }
   })
@@ -310,7 +337,7 @@ app.get('/api/admin/data', adminAuth, (_req, res) => {
   const allRecharges = (db.frontendUsers ?? []).flatMap((u) => u.platformData.rechargeRequests ?? [])
   const verificationRows = (db.frontendUsers ?? []).map((u) => u.verification).filter(Boolean)
   const withdrawRows = toWithdrawRows(allWithdraws)
-  return res.json({ ...db.adminData, taskClaims: allClaims, verifications: verificationRows, withdraws: withdrawRows.length ? withdrawRows : db.adminData.withdraws ?? [], recharges: allRecharges.length ? allRecharges : db.adminData.recharges ?? [], users: (db.frontendUsers ?? []).map((u) => ({ id: u.id, username: u.username, frozen: u.frozen ?? false, createdAt: u.createdAt ?? '', verification: u.verification?.status ?? 'none' })) })
+  return res.json({ ...db.adminData, taskClaims: allClaims, verifications: verificationRows, withdraws: withdrawRows.length ? withdrawRows : db.adminData.withdraws ?? [], recharges: allRecharges.length ? allRecharges : db.adminData.recharges ?? [], users: (db.frontendUsers ?? []).map((u) => ({ id: u.id, username: u.username, nickname: u.nickname ?? '', phone: u.phone ?? '', region: u.region ?? '', inviteCode: u.inviteCode ?? '', invitedBy: u.invitedBy ?? '', frozen: u.frozen ?? false, createdAt: u.createdAt ?? '', verification: u.verification?.status ?? 'none' })) })
 })
 
 app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
@@ -320,11 +347,11 @@ app.post('/api/admin/task-claims/:claimId/review', adminAuth, (req, res) => {
   let updatedClaim = null
   const db = updateDb((current) => {
     let tui = -1, tci = -1
-    ;(current.frontendUsers ?? []).forEach((u, ui) => { ;(u.platformData.claimedTasks ?? []).forEach((c, ci) => { if (c.id === claimId && (c.status === '待审核' || c.status === 'under_review')) { tui = ui; tci = ci } }) })
+    ;(current.frontendUsers ?? []).forEach((u, ui) => { ;(u.platformData.claimedTasks ?? []).forEach((c, ci) => { if (c.id === claimId && (c.status === '寰呭鏍? || c.status === 'under_review')) { tui = ui; tci = ci } }) })
     if (tui === -1) return current
     const nextUsers = [...current.frontendUsers]
     const nextClaims = [...(nextUsers[tui].platformData.claimedTasks ?? [])]
-    updatedClaim = { ...nextClaims[tci], status: action === 'approve' ? '已完成' : '已驳回', reviewedAt: formatTimestamp(), summary: action === 'approve' ? `${nextClaims[tci].title} approved.` : `Rejected: ${String(reason||'Resubmit clearer proof.').trim()}` }
+    updatedClaim = { ...nextClaims[tci], status: action === 'approve' ? '宸插畬鎴? : '宸查┏鍥?, reviewedAt: formatTimestamp(), summary: action === 'approve' ? `${nextClaims[tci].title} approved.` : `Rejected: ${String(reason||'Resubmit clearer proof.').trim()}` }
     nextClaims[tci] = updatedClaim
     nextUsers[tui] = { ...nextUsers[tui], platformData: derivePlatformData({ ...nextUsers[tui].platformData, claimedTasks: nextClaims }) }
     const allClaims = nextUsers.flatMap((u) => u.platformData.claimedTasks ?? [])
@@ -343,11 +370,11 @@ app.post('/api/admin/withdraw-requests/:requestId/review', adminAuth, (req, res)
   let updatedRequest = null
   const db = updateDb((current) => {
     let tui = -1, tri = -1
-    ;(current.frontendUsers ?? []).forEach((u, ui) => { ;(u.platformData.withdrawRequests ?? []).forEach((r, ri) => { if (r.id === requestId && (r.status === '待审核' || r.status === 'under_review')) { tui = ui; tri = ri } }) })
+    ;(current.frontendUsers ?? []).forEach((u, ui) => { ;(u.platformData.withdrawRequests ?? []).forEach((r, ri) => { if (r.id === requestId && (r.status === '寰呭鏍? || r.status === 'under_review')) { tui = ui; tri = ri } }) })
     if (tui === -1) return current
     const nextUsers = [...current.frontendUsers]
     const nextReqs = [...(nextUsers[tui].platformData.withdrawRequests ?? [])]
-    updatedRequest = { ...nextReqs[tri], status: action === 'approve' ? '已通过' : '已驳回', reviewedAt: formatTimestamp(), summary: action === 'approve' ? 'Withdrawal approved.' : `Rejected: ${String(reason||'Check account details.').trim()}` }
+    updatedRequest = { ...nextReqs[tri], status: action === 'approve' ? '宸查€氳繃' : '宸查┏鍥?, reviewedAt: formatTimestamp(), summary: action === 'approve' ? 'Withdrawal approved.' : `Rejected: ${String(reason||'Check account details.').trim()}` }
     nextReqs[tri] = updatedRequest
     nextUsers[tui] = { ...nextUsers[tui], platformData: derivePlatformData({ ...nextUsers[tui].platformData, withdrawRequests: nextReqs }) }
     const allWithdraws = nextUsers.flatMap((u) => u.platformData.withdrawRequests ?? [])
@@ -366,8 +393,8 @@ app.post('/api/admin/verifications/:verificationId/review', adminAuth, (req, res
   const db = updateDb((current) => ({
     ...current,
     frontendUsers: (current.frontendUsers ?? []).map((u) => {
-      if (u.verification?.id !== verificationId || (u.verification?.status !== 'under_review' && u.verification?.status !== '待审核')) return u
-      updatedVerification = { ...u.verification, status: action === 'approve' ? '已通过' : '已驳回', reviewedAt: formatTimestamp(), summary: action === 'approve' ? 'Identity verification approved.' : `Rejected: ${String(reason||'Resubmit documents.').trim()}` }
+      if (u.verification?.id !== verificationId || (u.verification?.status !== 'under_review' && u.verification?.status !== '寰呭鏍?)) return u
+      updatedVerification = { ...u.verification, status: action === 'approve' ? '宸查€氳繃' : '宸查┏鍥?, reviewedAt: formatTimestamp(), summary: action === 'approve' ? 'Identity verification approved.' : `Rejected: ${String(reason||'Resubmit documents.').trim()}` }
       return { ...u, verification: updatedVerification }
     }),
     adminData: updatedVerification ? updateVerificationStatus(current.adminData, updatedVerification, updatedVerification.status) : current.adminData,
@@ -382,7 +409,7 @@ app.post('/api/platform/recharge-requests', frontendAuth, (req, res) => {
   if (!amountNum || amountNum <= 0) return res.status(400).json({ message: 'Amount must be greater than 0.' })
   if (!String(txId||'').trim()) return res.status(400).json({ message: 'Please provide a transaction ID.' })
   const user = req.frontendUser
-  if (!user.verification || (user.verification.status !== 'approved' && user.verification.status !== '已通过')) {
+  if (!user.verification || (user.verification.status !== 'approved' && user.verification.status !== '宸查€氳繃')) {
     return res.status(403).json({ message: 'Real-name verification required.' })
   }
   let createdRequest = null
@@ -439,7 +466,7 @@ app.post('/api/admin/users/:userId/freeze', adminAuth, (req, res) => {
   const db = updateDb((current) => ({ ...current, frontendUsers: (current.frontendUsers ?? []).map((u) => u.id === userId ? { ...u, frozen: action === 'freeze' } : u) }))
   const user = (db.frontendUsers ?? []).find((u) => u.id === userId)
   if (!user) return res.status(404).json({ message: 'User not found.' })
-  const users = (db.frontendUsers ?? []).map((u) => ({ id: u.id, username: u.username, frozen: u.frozen ?? false, createdAt: u.createdAt ?? '', verification: u.verification?.status ?? 'none' }))
+  const users = (db.frontendUsers ?? []).map((u) => ({ id: u.id, username: u.username, nickname: u.nickname ?? '', phone: u.phone ?? '', region: u.region ?? '', inviteCode: u.inviteCode ?? '', invitedBy: u.invitedBy ?? '', frozen: u.frozen ?? false, createdAt: u.createdAt ?? '', verification: u.verification?.status ?? 'none' }))
   return res.json({ message: action === 'freeze' ? 'User frozen.' : 'User unfrozen.', users })
 })
 
@@ -463,7 +490,7 @@ app.post('/api/admin/orders/:orderNo/review', adminAuth, (req, res) => {
   const { orderNo } = req.params
   const { action } = req.body
   if (!['approve','reject'].includes(action)) return res.status(400).json({ message: 'Invalid action.' })
-  const db = updateDb((current) => ({ ...current, adminData: { ...current.adminData, orders: (current.adminData.orders ?? []).map((o) => o.orderNo === orderNo ? { ...o, status: action === 'approve' ? '已完成' : '已驳回', finalPayTime: formatTimestamp(), paid: action === 'approve' ? 'Yes' : 'No' } : o) } }))
+  const db = updateDb((current) => ({ ...current, adminData: { ...current.adminData, orders: (current.adminData.orders ?? []).map((o) => o.orderNo === orderNo ? { ...o, status: action === 'approve' ? '宸插畬鎴? : '宸查┏鍥?, finalPayTime: formatTimestamp(), paid: action === 'approve' ? 'Yes' : 'No' } : o) } }))
   return res.json({ message: action === 'approve' ? 'Order approved.' : 'Order rejected.', adminData: db.adminData })
 })
 
@@ -477,4 +504,7 @@ if (NODE_ENV === 'production') {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} (${NODE_ENV})`)
 })
+
+
+
 
