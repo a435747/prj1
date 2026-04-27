@@ -130,7 +130,7 @@ export function FrontendAuthPage({ onLogin, onRegister }) {
     <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(145deg,#050505,#111827)] p-4">
       <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-white/10 bg-black/70 p-8 text-white shadow-2xl backdrop-blur-md">
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.34em] text-white/50">Finance Task Hub</p>
+          <p className="text-xs uppercase tracking-[0.34em] text-white/50">TTS shop</p>
           <h1 className="mt-2 text-3xl font-semibold">{mode === 'login' ? 'User Login' : 'Create Account'}</h1>
           <p className="mt-2 text-sm text-white/60">
             {mode === 'login'
